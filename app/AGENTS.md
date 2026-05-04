@@ -30,6 +30,8 @@ Next.js App Router directory. All pages, layouts, and API routes live here.
 |---|---|---|
 | `/` | `app/page.tsx` | Buckets list view — server component, queries DB directly, renders table + create dialog |
 
+> **Any page or route that imports from `@/db` must export `export const dynamic = "force-dynamic"` at the top of the file.** Without it, Next.js will attempt to statically pre-render the page at build time and fail because the database doesn't exist in the build container.
+
 ## Styling Rules
 
 - **Do not** add spacing, color, or layout CSS without explicit instruction from the user.

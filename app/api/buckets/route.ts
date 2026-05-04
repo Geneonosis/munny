@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { db } from "@/db";
 import { buckets, bucketTypes } from "@/db/schema";
 import { eq, ne } from "drizzle-orm";

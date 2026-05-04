@@ -1,0 +1,22 @@
+# Dependencies — always compiled inside Docker for the target platform
+node_modules
+
+# Next.js build output
+.next
+
+# Local database files
+data
+
+# Local env files
+.env.local
+.env*.local
+
+# Dev tooling
+.git
+.gitignore
+.idea
+*.md
+
+# OS
+.DS_Store
+

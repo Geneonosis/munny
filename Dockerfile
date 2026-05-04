@@ -24,5 +24,5 @@ COPY --from=builder /app/scripts ./scripts
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "node --import tsx/esm scripts/migrate.ts && npm start"]
+CMD ["sh", "-c", "npm run migrate && npm start"]
 

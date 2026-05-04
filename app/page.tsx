@@ -1,6 +1,8 @@
+export const dynamic = "force-dynamic";
+
 import { db } from "@/db";
 import { buckets, bucketTypes, ledger } from "@/db/schema";
-import { eq, ne, sql } from "drizzle-orm";
+import { eq, ne } from "drizzle-orm";
 import {
   Table,
   TableBody,
@@ -11,8 +13,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { CreateBucketDialog } from "@/components/create-bucket-dialog";
+import { BalancePieChart } from "@/components/balance-pie-chart";
+import { BalanceHistoryChart } from "@/components/balance-history-chart";
 
-// Formats cents to a readable currency string e.g. 1250 → "$12.50"
 function formatCents(cents: number, currency = "USD") {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
 }
@@ -32,17 +35,39 @@ export default function Home() {
     .where(ne(buckets.status, "deleted"))
     .all();
 
-  // Calculate balance per bucket: SUM(in) - SUM(out) in cents
-  const balanceRows = db
-    .select({
-      bucketId: ledger.bucketId,
-      balance: sql<number>`SUM(CASE WHEN flow = 'in' THEN amount ELSE -amount END)`,
-    })
-    .from(ledger)
-    .groupBy(ledger.bucketId)
-    .all();
+  // Current balance per bucket
+  const allEntries = db.select().from(ledger).orderBy(ledger.date, ledger.id).all();
 
-  const balanceMap = Object.fromEntries(balanceRows.map((r) => [r.bucketId, r.balance]));
+  const balanceMap: Record<number, number> = {};
+  for (const b of allBuckets) balanceMap[b.id] = 0;
+  for (const e of allEntries) {
+    if (balanceMap[e.bucketId] !== undefined) {
+      balanceMap[e.bucketId] += e.flow === "in" ? e.amount : -e.amount;
+    }
+  }
+
+  // Build time series snapped to transaction dates (for history chart)
+  const dates = [...new Set(allEntries.map((e) => e.date))].sort();
+  const runningBalance: Record<number, number> = {};
+  for (const b of allBuckets) runningBalance[b.id] = 0;
+
+  const series: Record<string, number | string>[] = [];
+  let idx = 0;
+  for (const date of dates) {
+    while (idx < allEntries.length && allEntries[idx].date === date) {
+      const e = allEntries[idx];
+      if (runningBalance[e.bucketId] !== undefined) {
+        runningBalance[e.bucketId] += e.flow === "in" ? e.amount : -e.amount;
+      }
+      idx++;
+    }
+    series.push({ date, ...Object.fromEntries(Object.entries(runningBalance).map(([k, v]) => [k, v])) });
+  }
+
+  // Only chart buckets with a non-zero current balance
+  const chartBuckets = allBuckets
+    .filter((b) => (balanceMap[b.id] ?? 0) !== 0)
+    .map((b) => ({ id: b.id, name: b.name, currency: b.currency, currentBalance: balanceMap[b.id] }));
 
   const allTypes = db.select().from(bucketTypes).all();
 
@@ -52,6 +77,20 @@ export default function Home() {
         <h1 className="text-2xl font-semibold">Buckets</h1>
         <CreateBucketDialog bucketTypes={allTypes} />
       </div>
+
+      {chartBuckets.length > 0 && (
+        <div className="grid grid-cols-2 gap-8 mb-10">
+          <div>
+            <h2 className="text-sm font-medium mb-4">Balance Breakdown</h2>
+            <BalancePieChart buckets={chartBuckets} />
+          </div>
+          <div>
+            <h2 className="text-sm font-medium mb-4">Balance History</h2>
+            <BalanceHistoryChart buckets={chartBuckets} series={series} />
+          </div>
+        </div>
+      )}
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -86,5 +125,7 @@ export default function Home() {
     </main>
   );
 }
+
+
 
 

@@ -7,7 +7,7 @@ This directory contains all database layer code.
 | File | Purpose |
 |---|---|
 | `schema.ts` | Drizzle ORM table definitions — the source of truth for the DB schema |
-| `index.ts` | Initializes the `better-sqlite3` connection and exports the `db` Drizzle client |
+| `index.ts` | Initializes the `better-sqlite3` connection and exports the `db` Drizzle client via a **lazy proxy** — the database file is not opened until the first query is made, allowing Next.js to import this module at build time without a live DB present |
 | `seed.ts` | Two exports: `seed()` (system data only, idempotent) and `seedDev()` (system + mock dev data, idempotent) |
 
 ## Schema Overview

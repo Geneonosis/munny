@@ -31,6 +31,7 @@ Next.js App Router Route Handlers — the server-side API layer. All routes talk
 
 ## Conventions
 
+- **Every route handler file must export `export const dynamic = "force-dynamic"`** at the top. Without this, Next.js will attempt to statically generate the route at build time and fail because `better-sqlite3` requires a runtime filesystem.
 - All responses go through `_lib/response.ts` helpers: `json(data, status?)` and `error(message, status?)`.
 - `better-sqlite3` is synchronous — Drizzle calls do **not** use `await`. Route handler functions are still declared `async` for `req.json()`.
 - Input validation is done manually (no schema validation library). Keep it simple.
