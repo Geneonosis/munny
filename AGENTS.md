@@ -50,6 +50,7 @@ data/             # SQLite database file(s) — gitignored, created at runtime
 - `better-sqlite3` is a native module — it is listed in `serverExternalPackages` in `next.config.ts` and must stay there.
 - shadcn/ui components live in `components/ui/` and are built on `@base-ui/react` — **not** Radix UI. The APIs differ from Radix (e.g. use `render={<Component />}` instead of `asChild`, `onValueChange` receives `string | null`).
 - Pages are **Server Components** by default — query the DB directly. Only create `"use client"` components for interactivity (forms, dialogs, state).
+- **All monetary amounts are stored as integers in cents** (e.g. $12.50 = `1250`). Never use floats for money. Format for display using `Intl.NumberFormat`.
 
 ## Running Locally
 

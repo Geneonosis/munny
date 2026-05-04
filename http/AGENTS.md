@@ -8,6 +8,7 @@ This directory contains WebStorm HTTP Client files for manually testing the API 
 |---|---|
 | `bucket-types.http` | `GET /api/bucket-types`, `POST /api/bucket-types`, `DELETE /api/bucket-types/:id` |
 | `buckets.http` | `GET /api/buckets`, `GET /api/buckets/:id`, `POST /api/buckets`, `PATCH /api/buckets/:id`, `DELETE /api/buckets/:id` |
+| `ledger.http` | `GET /api/ledger`, `GET /api/ledger?bucketId=`, `GET /api/ledger/:id`, `POST /api/ledger`, `PATCH /api/ledger/:id`, `DELETE /api/ledger/:id` |
 
 ## Usage
 

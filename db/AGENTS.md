@@ -29,6 +29,22 @@ The core account/wallet entity. A bucket is any container that holds money (e.g.
   - `deactivated` — temporarily disabled
   - `deleted` — soft-deleted; treat as gone for all practical purposes
 
+### `ledger`
+The core transaction log. Every movement of money in or out of any bucket is a row here.
+
+- `bucket_id` — FK → `buckets.id`
+- `amount` — integer, stored in **cents** (e.g. $12.50 = `1250`). Always positive.
+- `flow` — `'in'` (money entering the bucket) or `'out'` (money leaving the bucket)
+- `note` — optional description of the transaction
+- `date` — the real-world transaction date (`YYYY-MM-DD`), not the insert timestamp
+- `created_at` — when the row was inserted
+
+**Balance formula:** `SUM(CASE WHEN flow = 'in' THEN amount ELSE -amount END)` per bucket.
+
+**Transfers between buckets** are represented as two entries: one `out` from the source bucket, one `in` to the destination bucket.
+
+**Never use floats for amounts** — always work in cents (integers).
+
 ## Rules
 
 - **After any change to `schema.ts`**, run `npm run db:generate` from the project root to produce a new migration file in `drizzle/`.

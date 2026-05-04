@@ -1,0 +1,59 @@
+@baseUrl = http://localhost:3000/api
+
+### List all ledger entries
+GET {{baseUrl}}/ledger
+
+###
+
+### List ledger entries for a specific bucket
+GET {{baseUrl}}/ledger?bucketId=1
+
+###
+
+### Get a single ledger entry
+GET {{baseUrl}}/ledger/1
+
+###
+
+### Create a ledger entry (money in)
+POST {{baseUrl}}/ledger
+Content-Type: application/json
+
+{
+  "bucketId": 1,
+  "amount": 50000,
+  "flow": "in",
+  "note": "Paycheck",
+  "date": "2026-05-01"
+}
+
+###
+
+### Create a ledger entry (money out)
+POST {{baseUrl}}/ledger
+Content-Type: application/json
+
+{
+  "bucketId": 1,
+  "amount": 1200,
+  "flow": "out",
+  "note": "Coffee",
+  "date": "2026-05-02"
+}
+
+###
+
+### Update a ledger entry
+PATCH {{baseUrl}}/ledger/1
+Content-Type: application/json
+
+{
+  "note": "Updated note",
+  "amount": 51000
+}
+
+###
+
+### Delete a ledger entry
+DELETE {{baseUrl}}/ledger/1
+

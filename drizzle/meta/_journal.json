@@ -8,6 +8,13 @@
       "when": 1777869136015,
       "tag": "0000_panoramic_grim_reaper",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1777870706541,
+      "tag": "0001_tan_zaran",
+      "breakpoints": true
     }
   ]
 }

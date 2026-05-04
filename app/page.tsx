@@ -1,6 +1,6 @@
 import { db } from "@/db";
-import { buckets, bucketTypes } from "@/db/schema";
-import { eq, ne } from "drizzle-orm";
+import { buckets, bucketTypes, ledger } from "@/db/schema";
+import { eq, ne, sql } from "drizzle-orm";
 import {
   Table,
   TableBody,
@@ -11,6 +11,11 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { CreateBucketDialog } from "@/components/create-bucket-dialog";
+
+// Formats cents to a readable currency string e.g. 1250 → "$12.50"
+function formatCents(cents: number, currency = "USD") {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
+}
 
 export default function Home() {
   const allBuckets = db
@@ -27,6 +32,18 @@ export default function Home() {
     .where(ne(buckets.status, "deleted"))
     .all();
 
+  // Calculate balance per bucket: SUM(in) - SUM(out) in cents
+  const balanceRows = db
+    .select({
+      bucketId: ledger.bucketId,
+      balance: sql<number>`SUM(CASE WHEN flow = 'in' THEN amount ELSE -amount END)`,
+    })
+    .from(ledger)
+    .groupBy(ledger.bucketId)
+    .all();
+
+  const balanceMap = Object.fromEntries(balanceRows.map((r) => [r.bucketId, r.balance]));
+
   const allTypes = db.select().from(bucketTypes).all();
 
   return (
@@ -40,32 +57,30 @@ export default function Home() {
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Type</TableHead>
+            <TableHead>Balance</TableHead>
             <TableHead>Currency</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Created</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {allBuckets.map((bucket) => (
-            <TableRow key={bucket.id}>
-              <TableCell className="font-medium">{bucket.name}</TableCell>
-              <TableCell className="capitalize">{bucket.type.name}</TableCell>
-              <TableCell>{bucket.currency}</TableCell>
-              <TableCell>
-                <Badge
-                  variant={
-                    bucket.status === "active"
-                      ? "default"
-                      : "secondary"
-                  }
-                  className="capitalize"
-                >
-                  {bucket.status}
-                </Badge>
-              </TableCell>
-              <TableCell>{bucket.createdAt}</TableCell>
-            </TableRow>
-          ))}
+          {allBuckets.map((bucket) => {
+            const balance = balanceMap[bucket.id] ?? 0;
+            return (
+              <TableRow key={bucket.id}>
+                <TableCell className="font-medium">{bucket.name}</TableCell>
+                <TableCell className="capitalize">{bucket.type.name}</TableCell>
+                <TableCell className="font-mono">{formatCents(balance, bucket.currency)}</TableCell>
+                <TableCell>{bucket.currency}</TableCell>
+                <TableCell>
+                  <Badge variant={bucket.status === "active" ? "default" : "secondary"} className="capitalize">
+                    {bucket.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>{bucket.createdAt}</TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </main>

@@ -20,6 +20,15 @@ Next.js App Router Route Handlers — the server-side API layer. All routes talk
 | PATCH | `/api/buckets/[id]` | Update any of: `name`, `currency`, `typeId`, `status` |
 | DELETE | `/api/buckets/[id]` | Soft-delete (sets status to `"deleted"`) |
 
+### Ledger
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/ledger` | List all ledger entries (optional `?bucketId=` filter), ordered by date |
+| POST | `/api/ledger` | Create an entry `{ bucketId, amount (cents), flow ('in'/'out'), date (YYYY-MM-DD), note? }` |
+| GET | `/api/ledger/[id]` | Get a single entry |
+| PATCH | `/api/ledger/[id]` | Update any of: `amount`, `flow`, `note`, `date` |
+| DELETE | `/api/ledger/[id]` | Hard delete an entry |
+
 ## Conventions
 
 - All responses go through `_lib/response.ts` helpers: `json(data, status?)` and `error(message, status?)`.

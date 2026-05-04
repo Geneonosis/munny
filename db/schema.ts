@@ -30,3 +30,20 @@ export const buckets = sqliteTable("buckets", {
     .default(sql`(current_timestamp)`),
 });
 
+export const ledger = sqliteTable("ledger", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  bucketId: integer("bucket_id")
+    .notNull()
+    .references(() => buckets.id),
+  // Amount stored in cents (e.g. $12.50 = 1250) to avoid floating point issues
+  amount: integer("amount").notNull(),
+  // 'in' = money entering the bucket, 'out' = money leaving the bucket
+  flow: text("flow", { enum: ["in", "out"] }).notNull(),
+  note: text("note"),
+  // The actual date of the transaction (ISO 8601 date string: YYYY-MM-DD)
+  date: text("date").notNull(),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(current_timestamp)`),
+});
+
