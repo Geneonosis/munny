@@ -1,0 +1,20 @@
+@baseUrl = http://localhost:3000/api
+
+### List all bucket types
+GET {{baseUrl}}/bucket-types
+
+###
+
+### Create a custom bucket type
+POST {{baseUrl}}/bucket-types
+Content-Type: application/json
+
+{
+  "name": "envelope"
+}
+
+###
+
+### Delete a custom bucket type
+DELETE {{baseUrl}}/bucket-types/8
+

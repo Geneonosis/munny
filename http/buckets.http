@@ -1,0 +1,57 @@
+@baseUrl = http://localhost:3000/api
+
+### List all buckets
+GET {{baseUrl}}/buckets
+
+###
+
+### Get a single bucket
+GET {{baseUrl}}/buckets/1
+
+###
+
+### Create a bucket
+POST {{baseUrl}}/buckets
+Content-Type: application/json
+
+{
+  "name": "Chase Checking",
+  "typeId": 1,
+  "currency": "USD"
+}
+
+###
+
+### Update a bucket name
+PATCH {{baseUrl}}/buckets/1
+Content-Type: application/json
+
+{
+  "name": "Chase Checking (updated)"
+}
+
+###
+
+### Archive a bucket
+PATCH {{baseUrl}}/buckets/1
+Content-Type: application/json
+
+{
+  "status": "archived"
+}
+
+###
+
+### Deactivate a bucket
+PATCH {{baseUrl}}/buckets/1
+Content-Type: application/json
+
+{
+  "status": "deactivated"
+}
+
+###
+
+### Delete a bucket (soft delete)
+DELETE {{baseUrl}}/buckets/1
+
