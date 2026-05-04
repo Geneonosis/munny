@@ -1,7 +1,8 @@
 {
   "name": "munny",
+  "description": "The open source money management software to help bring you financial freedom. Break away from online subscription based services and take control of your financial future.",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
