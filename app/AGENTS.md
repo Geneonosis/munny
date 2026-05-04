@@ -28,15 +28,23 @@ Next.js App Router directory. All pages, layouts, and API routes live here.
 
 | Route | File | Description |
 |---|---|---|
-| `/` | `app/page.tsx` | Buckets list view — server component, queries DB directly, renders table + create dialog |
+| `/` | `app/page.tsx` | Buckets list view — server component; queries DB directly for buckets, balances, and time-series data; renders pie chart, history chart, and table |
 
-> **Any page or route that imports from `@/db` must export `export const dynamic = "force-dynamic"` at the top of the file.** Without it, Next.js will attempt to statically pre-render the page at build time and fail because the database doesn't exist in the build container.
+> **Any file that imports from `@/db` must export `export const dynamic = "force-dynamic"` at the top.** This applies to both pages and API routes. Without it, Next.js attempts to statically pre-render at build time and fails because the database doesn't exist in the build container.
+
+## Charting
+
+- Recharts is used for all charts, installed via `npx shadcn@latest add chart`.
+- Chart colors come from `--chart-1` through `--chart-5` CSS variables in `globals.css`. The shadcn defaults are grayscale — **do not reset them**.
+- `Tooltip` formatter in Recharts receives `value: ValueType | undefined` — always cast with `Number(value)` before passing to `Intl.NumberFormat`.
+- Custom data fields added to chart data (e.g. `pct`) are **not** accessible in `PieLabelRenderProps` — use the built-in `percent` field instead (Recharts provides it as a 0–1 ratio).
 
 ## Styling Rules
 
 - **Do not** add spacing, color, or layout CSS without explicit instruction from the user.
 - Font-related CSS is acceptable to add.
 - The user handles all color and spacing decisions.
+- `globals.css` is managed jointly by the project and shadcn. Do not remove shadcn CSS variable blocks.
 
 ## Database Access
 

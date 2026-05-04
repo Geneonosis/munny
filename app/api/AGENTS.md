@@ -29,6 +29,11 @@ Next.js App Router Route Handlers — the server-side API layer. All routes talk
 | PATCH | `/api/ledger/[id]` | Update any of: `amount`, `flow`, `note`, `date` |
 | DELETE | `/api/ledger/[id]` | Hard delete an entry |
 
+### Charts
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/charts/history` | Returns `{ buckets, series }` — active (non-zero balance) buckets and a time-series of cumulative balances snapped to transaction dates |
+
 ## Conventions
 
 - **Every route handler file must export `export const dynamic = "force-dynamic"`** at the top. Without this, Next.js will attempt to statically generate the route at build time and fail because `better-sqlite3` requires a runtime filesystem.

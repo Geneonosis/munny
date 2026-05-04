@@ -14,6 +14,8 @@ React components used across the application.
 | File | Type | Purpose |
 |---|---|---|
 | `create-bucket-dialog.tsx` | Client (`"use client"`) | Dialog form for creating a new bucket. Accepts `bucketTypes` as a prop from the server, POSTs to `/api/buckets`, and calls `router.refresh()` on success. |
+| `balance-pie-chart.tsx` | Client (`"use client"`) | Recharts `PieChart` showing each bucket's share of total balance. Receives `{ id, name, currentBalance, currency }[]`. Zero-balance buckets are excluded. Colors assigned from `--chart-N` CSS vars by index. |
+| `balance-history-chart.tsx` | Client (`"use client"`) | Recharts `LineChart` showing running balance per bucket over time. Receives `buckets` and `series` (pre-computed time-series from the server). Includes a `@base-ui/react` range `Slider` that snaps to transaction dates to control the visible window. |
 
 ## Rules
 
@@ -23,4 +25,8 @@ React components used across the application.
 - shadcn/ui is built on `@base-ui/react` (not Radix). Key API notes:
   - Use `render={<Component />}` instead of `asChild` on trigger/slot components.
   - `Select.onValueChange` provides `string | null` — guard against null.
+- Recharts type gotchas:
+  - `Tooltip` formatter receives `value: ValueType | undefined` — cast with `Number(value)`.
+  - `PieLabelRenderProps` only contains built-in Recharts fields — use `percent` (0–1) not custom data keys like `pct`.
+  - Custom data keys on pie slices are not passed to the label render function.
 
