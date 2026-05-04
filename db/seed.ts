@@ -39,9 +39,16 @@ export async function seedDev() {
   ] as const;
 
   for (const bucket of mockBuckets) {
-    db.run(
-      sql`INSERT OR IGNORE INTO ${buckets} (name, type_id, currency, status) VALUES (${bucket.name}, ${bucket.typeId}, ${bucket.currency}, ${bucket.status})`
-    );
+    const exists = db
+      .select({ id: buckets.id })
+      .from(buckets)
+      .where(sql`name = ${bucket.name} AND type_id = ${bucket.typeId}`)
+      .get();
+    if (!exists) {
+      db.run(
+        sql`INSERT INTO ${buckets} (name, type_id, currency, status) VALUES (${bucket.name}, ${bucket.typeId}, ${bucket.currency}, ${bucket.status})`
+      );
+    }
   }
 
   console.log("✓ Seeded mock dev buckets");
@@ -72,10 +79,17 @@ export async function seedDev() {
   ] as const;
 
   for (const entry of mockEntries) {
-    db.run(
-      sql`INSERT OR IGNORE INTO ${ledger} (bucket_id, amount, flow, note, date)
-          VALUES (${entry.bucketId}, ${entry.amount}, ${entry.flow}, ${entry.note}, ${entry.date})`
-    );
+    const exists = db
+      .select({ id: ledger.id })
+      .from(ledger)
+      .where(sql`bucket_id = ${entry.bucketId} AND note = ${entry.note} AND date = ${entry.date}`)
+      .get();
+    if (!exists) {
+      db.run(
+        sql`INSERT INTO ${ledger} (bucket_id, amount, flow, note, date)
+            VALUES (${entry.bucketId}, ${entry.amount}, ${entry.flow}, ${entry.note}, ${entry.date})`
+      );
+    }
   }
 
   console.log("✓ Seeded mock ledger entries");

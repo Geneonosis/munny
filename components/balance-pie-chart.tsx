@@ -1,6 +1,7 @@
 "use client";
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import type { PieLabelRenderProps } from "recharts";
 
 type Bucket = { id: number; name: string; currentBalance: number; currency: string };
 
@@ -18,13 +19,14 @@ function formatCents(cents: number) {
 
 export function BalancePieChart({ buckets }: { buckets: Bucket[] }) {
   const active = buckets.filter((b) => b.currentBalance > 0);
-  const total = active.reduce((sum, b) => sum + b.currentBalance, 0);
 
   const data = active.map((b) => ({
     name: b.name,
     value: b.currentBalance,
-    pct: total > 0 ? ((b.currentBalance / total) * 100).toFixed(1) : "0",
   }));
+
+  const renderLabel = ({ name, percent }: PieLabelRenderProps) =>
+    `${name} ${((Number(percent) ?? 0) * 100).toFixed(1)}%`;
 
   return (
     <ResponsiveContainer width="100%" height={300}>
@@ -36,16 +38,14 @@ export function BalancePieChart({ buckets }: { buckets: Bucket[] }) {
           cx="50%"
           cy="50%"
           outerRadius={100}
-          label={({ name, pct }) => `${name} ${pct}%`}
+          label={renderLabel}
           labelLine={false}
         >
           {data.map((_, i) => (
             <Cell key={i} fill={COLORS[i % COLORS.length]} />
           ))}
         </Pie>
-        <Tooltip
-          formatter={(value: number, name: string) => [formatCents(value), name]}
-        />
+          <Tooltip formatter={(value) => [formatCents(Number(value)), ""]} />
         <Legend />
       </PieChart>
     </ResponsiveContainer>
