@@ -24,10 +24,16 @@ Next.js App Router Route Handlers — the server-side API layer. All routes talk
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/ledger` | List all ledger entries (optional `?bucketId=` filter), ordered by date |
-| POST | `/api/ledger` | Create an entry `{ bucketId, amount (cents), flow ('in'/'out'), date (YYYY-MM-DD), note? }` |
+| POST | `/api/ledger` | Create an entry `{ bucketId, amount (cents), flow ('in'/'out'), date (YYYY-MM-DD), note?, categoryId? }` |
 | GET | `/api/ledger/[id]` | Get a single entry |
-| PATCH | `/api/ledger/[id]` | Update any of: `amount`, `flow`, `note`, `date` |
+| PATCH | `/api/ledger/[id]` | Update any of: `amount`, `flow`, `note`, `date`, `categoryId` |
 | DELETE | `/api/ledger/[id]` | Hard delete an entry |
+
+### Categories
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/categories` | List all categories (system + user-defined) |
+| POST | `/api/categories` | Create a custom category `{ name }` — rejects duplicates with 409 |
 
 ### Charts
 | Method | Path | Description |
@@ -42,4 +48,4 @@ Next.js App Router Route Handlers — the server-side API layer. All routes talk
 - Input validation is done manually (no schema validation library). Keep it simple.
 - `GET /api/buckets` and `GET /api/buckets/[id]` always join `bucket_types` and return the full type object inline.
 - Deleted buckets are excluded from list endpoints but can still be fetched by ID.
-
+- System categories (`is_system = true`) cannot be deleted via the API.

@@ -29,10 +29,17 @@ The core account/wallet entity. A bucket is any container that holds money (e.g.
   - `deactivated` — temporarily disabled
   - `deleted` — soft-deleted; treat as gone for all practical purposes
 
+### `categories`
+An extensible enum table for transaction categorisation.
+
+- System categories (`is_system = true`): `income`, `food & dining`, `groceries`, `housing`, `utilities`, `transportation`, `entertainment`, `healthcare`, `shopping`, `savings & investment`, `transfer`, `other` — **never delete these**.
+- Users may add their own custom categories (`is_system = false`) via `POST /api/categories`.
+
 ### `ledger`
 The core transaction log. Every movement of money in or out of any bucket is a row here.
 
 - `bucket_id` — FK → `buckets.id`
+- `category_id` — FK → `categories.id`, nullable — optional classification of the transaction
 - `amount` — integer, stored in **cents** (e.g. $12.50 = `1250`). Always positive.
 - `flow` — `'in'` (money entering the bucket) or `'out'` (money leaving the bucket)
 - `note` — optional description of the transaction
@@ -50,4 +57,3 @@ The core transaction log. Every movement of money in or out of any bucket is a r
 - **After any change to `schema.ts`**, run `npm run db:generate` from the project root to produce a new migration file in `drizzle/`.
 - **Do not** manually edit generated migration files in `drizzle/`.
 - The `db` client exported from `index.ts` is a synchronous `better-sqlite3`-backed Drizzle instance — do not use async/await on raw DB calls.
-

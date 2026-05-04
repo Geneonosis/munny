@@ -28,17 +28,17 @@ Next.js App Router directory. All pages, layouts, and API routes live here.
 
 | Route | File | Description |
 |---|---|---|
-| `/` | `app/page.tsx` | Buckets list — server component; charts + table; bucket name links to detail page |
-| `/buckets/[id]` | `app/buckets/[id]/page.tsx` | Per-bucket ledger view — shows bucket header (name, type, currency, status, current balance), ledger entry table with running balance per row, and Add Transaction dialog |
+| `/` | `app/page.tsx` | Buckets overview — balance pie chart + history chart, then a table of all non-deleted buckets with current balance. Each bucket name links to its ledger page. Each row has an Edit button (opens `EditBucketDialog`). New buckets created via `CreateBucketDialog`. |
+| `/buckets/[id]` | `app/buckets/[id]/page.tsx` | Per-bucket ledger page — bucket header (name, type, currency, status, current balance), side-by-side Sankey flow chart + balance history chart, then a full ledger table with running balance per row. Each row has an Edit button (opens `EditTransactionDialog`). New entries via `AddTransactionDialog`. |
 
 > **Any file that imports from `@/db` must export `export const dynamic = "force-dynamic"` at the top.** This applies to both pages and API routes. Without it, Next.js attempts to statically pre-render at build time and fails because the database doesn't exist in the build container.
 
 ## Charting
 
-- Recharts is used for all charts, installed via `npx shadcn@latest add chart`.
+- Recharts is used for line and pie charts, installed via `npx shadcn@latest add chart`.
+- `@nivo/sankey` is used for the Sankey flow diagram on the bucket ledger page — it is a separate library from Recharts and renders pure SVG.
 - Chart colors come from `--chart-1` through `--chart-5` CSS variables in `globals.css`. The shadcn defaults are grayscale — **do not reset them**.
 - `Tooltip` formatter in Recharts receives `value: ValueType | undefined` — always cast with `Number(value)` before passing to `Intl.NumberFormat`.
-- Custom data fields added to chart data (e.g. `pct`) are **not** accessible in `PieLabelRenderProps` — use the built-in `percent` field instead (Recharts provides it as a 0–1 ratio).
 
 ## Styling Rules
 
@@ -52,4 +52,3 @@ Next.js App Router directory. All pages, layouts, and API routes live here.
 - Import the `db` client from `@/db` in Server Components or Route Handlers only.
 - **Never** import `db` into Client Components (`"use client"`).
 - `better-sqlite3` is synchronous — no `await` needed on Drizzle queries when using this driver.
-

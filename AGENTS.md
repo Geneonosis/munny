@@ -21,6 +21,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 | Database | SQLite via `better-sqlite3` |
 | ORM | Drizzle ORM |
 | Migrations | Drizzle Kit (migration files in `drizzle/`) |
+| Charts | Recharts (line/pie) + `@nivo/sankey` (Sankey flow diagram) |
 | Runtime | Node.js 20 |
 | Container | Docker + Docker Compose |
 
@@ -31,6 +32,7 @@ app/              # Next.js App Router pages, layouts, and API routes
   api/            # REST API route handlers
   api/_lib/       # Shared API utilities (response helpers)
   api/charts/     # Chart data computation endpoints
+  buckets/[id]/   # Per-bucket ledger detail page
 components/       # React components
   ui/             # shadcn/ui primitives (do not edit manually)
 db/               # Drizzle schema, DB connection, and seed logic
@@ -56,7 +58,15 @@ data/             # SQLite database file(s) — gitignored, created at runtime
 - Pages are **Server Components** by default — query the DB directly. Only create `"use client"` components for interactivity (forms, dialogs, state).
 - **All monetary amounts are stored as integers in cents** (e.g. $12.50 = `1250`). Never use floats for money. Format for display using `Intl.NumberFormat`.
 - Chart colors are defined as `--chart-1` through `--chart-5` CSS variables in `app/globals.css`. The shadcn default values are grayscale — they have been overridden with colorful `oklch` values. Do not reset them to grayscale.
-- Recharts is used for all charts (installed via `npx shadcn@latest add chart`). The `Tooltip` formatter receives `value: ValueType | undefined` — always cast with `Number(value)` before formatting.
+- Recharts is used for line and pie charts (installed via `npx shadcn@latest add chart`). The `Tooltip` formatter receives `value: ValueType | undefined` — always cast with `Number(value)` before formatting.
+- **`@nivo/sankey`** (+ `@nivo/core`) is installed for the Sankey flow diagram on the bucket ledger page. Nivo renders pure SVG — do not mix Recharts and Nivo in the same component. Pass colors via the `colors` callback using `--chart-N` CSS variables.
+
+## Dockerfile — Production Notes
+
+- The production `Dockerfile` uses a **multi-stage build**: `deps` → `builder` → `runner`.
+- `better-sqlite3` **must be compiled in the runner stage** — do not copy `node_modules` from `builder` to `runner`. The runner runs `npm ci --omit=dev` independently so native binaries compile for the correct Linux architecture.
+- `scripts/migrate.ts` is compiled to `scripts/migrate.js` during the build stage using `esbuild` (available as a Next.js dev dependency). The runner executes `node scripts/migrate.js` at startup — `tsx` is not available in production.
+- Next.js must be started with `--hostname 0.0.0.0` in the CMD, otherwise it only binds to `localhost` inside the container and is unreachable from the host.
 
 ## Running Locally
 
@@ -68,8 +78,7 @@ npm run dev           # start Next.js dev server
 ## Running via Docker
 
 ```bash
-docker compose up                                        # production container
+docker compose up --build                               # production container
 docker compose -f docker-compose.dev.yml up --build     # dev container (--build required after any code change)
 docker compose -f docker-compose.dev.yml down -v        # tear down and wipe the dev DB volume
 ```
-
