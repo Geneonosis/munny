@@ -6,7 +6,8 @@ Standalone Node.js/TypeScript scripts run outside the Next.js runtime, executed 
 
 | File | npm script | Purpose |
 |---|---|---|
-| `migrate.ts` | `npm run migrate` | Applies pending Drizzle migrations and runs the seed. Safe to run multiple times (idempotent). |
+| `migrate.ts` | `npm run migrate` | Applies pending Drizzle migrations and runs `seed()` (system data only). Safe to run multiple times. |
+| `migrate-dev.ts` | `npm run migrate:dev` | Applies pending Drizzle migrations and runs `seedDev()` (system + mock dev data). Used by `docker-compose.dev.yml` and local dev. Safe to run multiple times. |
 
 ## Rules
 

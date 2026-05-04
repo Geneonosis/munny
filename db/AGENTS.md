@@ -8,7 +8,7 @@ This directory contains all database layer code.
 |---|---|
 | `schema.ts` | Drizzle ORM table definitions — the source of truth for the DB schema |
 | `index.ts` | Initializes the `better-sqlite3` connection and exports the `db` Drizzle client |
-| `seed.ts` | Seeds system-level reference data on first run (idempotent) |
+| `seed.ts` | Two exports: `seed()` (system data only, idempotent) and `seedDev()` (system + mock dev data, idempotent) |
 
 ## Schema Overview
 

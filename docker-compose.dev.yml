@@ -1,0 +1,17 @@
+services:
+  munny-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: /app/data/munny-dev.db
+    volumes:
+      - munny-dev-db:/app/data
+    command: sh -c "node --import tsx/esm scripts/migrate-dev.ts && npm start"
+
+volumes:
+  munny-dev-db:
+
