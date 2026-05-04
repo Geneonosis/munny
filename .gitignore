@@ -43,3 +43,6 @@ next-env.d.ts
 # IDE files
 .idea/
 .vscode/
+
+# SQLite database
+data/

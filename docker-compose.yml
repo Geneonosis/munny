@@ -1,0 +1,13 @@
+services:
+  munny:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: /app/data/munny.db
+    volumes:
+      - munny-db-data:/app/data
+
+volumes:
+  munny-db-data:
+

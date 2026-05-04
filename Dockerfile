@@ -1,0 +1,28 @@
+FROM node:20-alpine AS base
+WORKDIR /app
+
+FROM base AS deps
+COPY package*.json ./
+RUN npm ci
+
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
+
+FROM base AS runner
+ENV NODE_ENV=production
+ENV DATABASE_URL=/app/data/munny.db
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/drizzle ./drizzle
+COPY --from=builder /app/db ./db
+COPY --from=builder /app/scripts ./scripts
+
+EXPOSE 3000
+
+CMD ["sh", "-c", "node --import tsx/esm scripts/migrate.ts && npm start"]
+
