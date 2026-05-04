@@ -28,7 +28,8 @@ Next.js App Router directory. All pages, layouts, and API routes live here.
 
 | Route | File | Description |
 |---|---|---|
-| `/` | `app/page.tsx` | Buckets list view — server component; queries DB directly for buckets, balances, and time-series data; renders pie chart, history chart, and table |
+| `/` | `app/page.tsx` | Buckets list — server component; charts + table; bucket name links to detail page |
+| `/buckets/[id]` | `app/buckets/[id]/page.tsx` | Per-bucket ledger view — shows bucket header (name, type, currency, status, current balance), ledger entry table with running balance per row, and Add Transaction dialog |
 
 > **Any file that imports from `@/db` must export `export const dynamic = "force-dynamic"` at the top.** This applies to both pages and API routes. Without it, Next.js attempts to statically pre-render at build time and fails because the database doesn't exist in the build container.
 

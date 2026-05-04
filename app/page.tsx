@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import Link from "next/link";
 import { db } from "@/db";
 import { buckets, bucketTypes, ledger } from "@/db/schema";
 import { eq, ne } from "drizzle-orm";
@@ -107,7 +108,11 @@ export default function Home() {
             const balance = balanceMap[bucket.id] ?? 0;
             return (
               <TableRow key={bucket.id}>
-                <TableCell className="font-medium">{bucket.name}</TableCell>
+                <TableCell className="font-medium">
+                  <Link href={`/buckets/${bucket.id}`} className="hover:underline">
+                    {bucket.name}
+                  </Link>
+                </TableCell>
                 <TableCell className="capitalize">{bucket.type.name}</TableCell>
                 <TableCell className="font-mono">{formatCents(balance, bucket.currency)}</TableCell>
                 <TableCell>{bucket.currency}</TableCell>

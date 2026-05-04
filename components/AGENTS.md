@@ -13,7 +13,7 @@ React components used across the application.
 
 | File | Type | Purpose |
 |---|---|---|
-| `create-bucket-dialog.tsx` | Client (`"use client"`) | Dialog form for creating a new bucket. Accepts `bucketTypes` as a prop from the server, POSTs to `/api/buckets`, and calls `router.refresh()` on success. |
+| `add-transaction-dialog.tsx` | Client (`"use client"`) | Dialog form for adding a ledger entry to a specific bucket. Accepts `bucketId` as a prop. Amount entered in dollars and converted to cents on submit. Calls `router.refresh()` on success. |
 | `balance-pie-chart.tsx` | Client (`"use client"`) | Recharts `PieChart` showing each bucket's share of total balance. Receives `{ id, name, currentBalance, currency }[]`. Zero-balance buckets are excluded. Colors assigned from `--chart-N` CSS vars by index. |
 | `balance-history-chart.tsx` | Client (`"use client"`) | Recharts `LineChart` showing running balance per bucket over time. Receives `buckets` and `series` (pre-computed time-series from the server). Includes a `@base-ui/react` range `Slider` that snaps to transaction dates to control the visible window. |
 
