@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/db";
-import { buckets, bucketTypes, ledger } from "@/db/schema";
+import { buckets, bucketTypes, categories, ledger } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import {
   Table,
@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { AddTransactionDialog } from "@/components/add-transaction-dialog";
+import { LedgerSankeyChart } from "@/components/ledger-sankey-chart";
+import { BucketBalanceHistoryChart } from "@/components/bucket-balance-history-chart";
 
 function formatCents(cents: number, currency = "USD") {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
@@ -44,20 +46,33 @@ export default async function BucketPage({ params }: Params) {
   if (!bucket) notFound();
 
   const entries = db
-    .select()
+    .select({
+      id: ledger.id,
+      amount: ledger.amount,
+      flow: ledger.flow,
+      note: ledger.note,
+      date: ledger.date,
+      categoryId: ledger.categoryId,
+      categoryName: categories.name,
+    })
     .from(ledger)
+    .leftJoin(categories, eq(ledger.categoryId, categories.id))
     .where(eq(ledger.bucketId, numId))
     .orderBy(ledger.date, ledger.id)
     .all();
 
-  // Compute running balance per row
-  let running = 0;
-  const rows = entries.map((e) => {
-    running += e.flow === "in" ? e.amount : -e.amount;
-    return { ...e, running };
-  });
+  const allCategories = db.select().from(categories).all();
 
-  const balance = running;
+  // Compute running balance per row immutably
+  const rows = entries.reduce<Array<typeof entries[number] & { running: number }>>(
+    (acc, e) => {
+      const prev = acc.at(-1)?.running ?? 0;
+      return [...acc, { ...e, running: prev + (e.flow === "in" ? e.amount : -e.amount) }];
+    },
+    []
+  );
+
+  const balance = rows.at(-1)?.running ?? 0;
 
   return (
     <main className="p-8">
@@ -83,7 +98,20 @@ export default async function BucketPage({ params }: Params) {
             {formatCents(balance, bucket.currency)}
           </p>
         </div>
-        <AddTransactionDialog bucketId={bucket.id} />
+        <AddTransactionDialog bucketId={bucket.id} availableCategories={allCategories} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="rounded-xl border p-6">
+          <h2 className="text-sm font-semibold mb-4">Monthly Flow</h2>
+          <LedgerSankeyChart rows={rows} />
+        </div>
+        <div className="rounded-xl border p-6">
+          <h2 className="text-sm font-semibold mb-4">Balance History</h2>
+          <BucketBalanceHistoryChart
+            series={rows.map((r) => ({ date: r.date, balance: r.running }))}
+          />
+        </div>
       </div>
 
       <Table>
@@ -91,6 +119,7 @@ export default async function BucketPage({ params }: Params) {
           <TableRow>
             <TableHead>Date</TableHead>
             <TableHead>Note</TableHead>
+            <TableHead>Category</TableHead>
             <TableHead>Direction</TableHead>
             <TableHead>Amount</TableHead>
             <TableHead>Balance</TableHead>
@@ -99,7 +128,7 @@ export default async function BucketPage({ params }: Params) {
         <TableBody>
           {rows.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">
+              <TableCell colSpan={6} className="text-center text-muted-foreground">
                 No transactions yet.
               </TableCell>
             </TableRow>
@@ -108,6 +137,9 @@ export default async function BucketPage({ params }: Params) {
             <TableRow key={row.id}>
               <TableCell>{row.date}</TableCell>
               <TableCell>{row.note ?? <span className="text-muted-foreground">—</span>}</TableCell>
+              <TableCell className="capitalize">
+                {row.categoryName ?? <span className="text-muted-foreground">—</span>}
+              </TableCell>
               <TableCell>
                 <Badge variant={row.flow === "in" ? "default" : "secondary"}>
                   {row.flow === "in" ? "In" : "Out"}

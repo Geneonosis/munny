@@ -15,6 +15,13 @@
       "when": 1777870706541,
       "tag": "0001_tan_zaran",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1777873384011,
+      "tag": "0002_dizzy_pepper_potts",
+      "breakpoints": true
     }
   ]
 }

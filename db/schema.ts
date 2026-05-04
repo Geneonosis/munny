@@ -30,11 +30,21 @@ export const buckets = sqliteTable("buckets", {
     .default(sql`(current_timestamp)`),
 });
 
+export const categories = sqliteTable("categories", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull().unique(),
+  isSystem: integer("is_system", { mode: "boolean" }).notNull().default(false),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(current_timestamp)`),
+});
+
 export const ledger = sqliteTable("ledger", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   bucketId: integer("bucket_id")
     .notNull()
     .references(() => buckets.id),
+  categoryId: integer("category_id").references(() => categories.id),
   // Amount stored in cents (e.g. $12.50 = 1250) to avoid floating point issues
   amount: integer("amount").notNull(),
   // 'in' = money entering the bucket, 'out' = money leaving the bucket

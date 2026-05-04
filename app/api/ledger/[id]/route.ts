@@ -41,6 +41,9 @@ export async function PATCH(req: Request, { params }: Params) {
   }
   if (body?.note !== undefined) updates.note = body.note?.trim() ?? null;
   if (body?.date !== undefined) updates.date = String(body.date).trim();
+  if (body?.categoryId !== undefined) {
+    updates.categoryId = body.categoryId ? Number(body.categoryId) : null;
+  }
 
   if (Object.keys(updates).length === 0) return error("no valid fields to update");
 

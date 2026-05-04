@@ -7,13 +7,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export function AddTransactionDialog({ bucketId }: { bucketId: number }) {
+type Category = { id: number; name: string };
+
+export function AddTransactionDialog({
+  bucketId,
+  availableCategories,
+}: {
+  bucketId: number;
+  availableCategories: Category[];
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [flow, setFlow] = useState("");
   const [note, setNote] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [categoryId, setCategoryId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,7 +36,14 @@ export function AddTransactionDialog({ bucketId }: { bucketId: number }) {
     const res = await fetch("/api/ledger", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bucketId, amount: cents, flow, note: note || null, date }),
+      body: JSON.stringify({
+        bucketId,
+        amount: cents,
+        flow,
+        note: note || null,
+        date,
+        categoryId: categoryId ? Number(categoryId) : null,
+      }),
     });
 
     const data = await res.json();
@@ -43,6 +59,7 @@ export function AddTransactionDialog({ bucketId }: { bucketId: number }) {
     setFlow("");
     setNote("");
     setDate(new Date().toISOString().slice(0, 10));
+    setCategoryId("");
     router.refresh();
   }
 
@@ -70,6 +87,18 @@ export function AddTransactionDialog({ bucketId }: { bucketId: number }) {
             <SelectContent>
               <SelectItem value="in">Money In</SelectItem>
               <SelectItem value="out">Money Out</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "")}>
+            <SelectTrigger>
+              <SelectValue placeholder="Category (optional)" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableCategories.map((c) => (
+                <SelectItem key={c.id} value={String(c.id)}>
+                  {c.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Input

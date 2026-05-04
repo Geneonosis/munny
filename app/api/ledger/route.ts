@@ -31,6 +31,7 @@ export async function POST(req: Request) {
   const flow = body?.flow;
   const note = body?.note?.trim() ?? null;
   const date = body?.date?.trim();
+  const categoryId = body?.categoryId ? Number(body.categoryId) : null;
 
   if (!bucketId || isNaN(bucketId)) return error("bucketId is required");
   if (!amount || isNaN(amount) || amount <= 0) return error("amount must be a positive number (in cents)");
@@ -42,7 +43,7 @@ export async function POST(req: Request) {
 
   const created = db
     .insert(ledger)
-    .values({ bucketId, amount, flow, note, date })
+    .values({ bucketId, amount, flow, note, date, categoryId })
     .returning()
     .get();
 
