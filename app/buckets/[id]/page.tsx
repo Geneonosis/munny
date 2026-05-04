@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { AddTransactionDialog } from "@/components/add-transaction-dialog";
+import { EditTransactionDialog } from "@/components/edit-transaction-dialog";
 import { LedgerSankeyChart } from "@/components/ledger-sankey-chart";
 import { BucketBalanceHistoryChart } from "@/components/bucket-balance-history-chart";
 
@@ -123,6 +124,7 @@ export default async function BucketPage({ params }: Params) {
             <TableHead>Direction</TableHead>
             <TableHead>Amount</TableHead>
             <TableHead>Balance</TableHead>
+            <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -150,6 +152,9 @@ export default async function BucketPage({ params }: Params) {
                 {formatCents(row.amount, bucket.currency)}
               </TableCell>
               <TableCell className="font-mono">{formatCents(row.running, bucket.currency)}</TableCell>
+              <TableCell>
+                <EditTransactionDialog row={row} availableCategories={allCategories} />
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

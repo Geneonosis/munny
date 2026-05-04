@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { CreateBucketDialog } from "@/components/create-bucket-dialog";
+import { EditBucketDialog } from "@/components/edit-bucket-dialog";
 import { BalancePieChart } from "@/components/balance-pie-chart";
 import { BalanceHistoryChart } from "@/components/balance-history-chart";
 
@@ -101,6 +102,7 @@ export default function Home() {
             <TableHead>Currency</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Created</TableHead>
+            <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -122,6 +124,9 @@ export default function Home() {
                   </Badge>
                 </TableCell>
                 <TableCell>{bucket.createdAt}</TableCell>
+                <TableCell>
+                  <EditBucketDialog bucket={bucket} bucketTypes={allTypes} />
+                </TableCell>
               </TableRow>
             );
           })}
