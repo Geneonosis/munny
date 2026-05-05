@@ -30,7 +30,7 @@ export default function Home() {
       currency: buckets.currency,
       status: buckets.status,
       createdAt: buckets.createdAt,
-      type: { id: bucketTypes.id, name: bucketTypes.name },
+      type: { id: bucketTypes.id, name: bucketTypes.name, kind: bucketTypes.kind },
     })
     .from(buckets)
     .innerJoin(bucketTypes, eq(buckets.typeId, bucketTypes.id))
@@ -48,10 +48,18 @@ export default function Home() {
     }
   }
 
-  // Build time series snapped to transaction dates (for history chart)
+  // Split into assets and liabilities
+  const assetBuckets = allBuckets.filter((b) => b.type.kind === "asset");
+  const liabilityBuckets = allBuckets.filter((b) => b.type.kind === "liability");
+
+  const totalAssets = assetBuckets.reduce((s, b) => s + (balanceMap[b.id] ?? 0), 0);
+  const totalLiabilities = liabilityBuckets.reduce((s, b) => s + (balanceMap[b.id] ?? 0), 0);
+  const netWorth = totalAssets - totalLiabilities;
+
+  // Build time series snapped to transaction dates (for history chart — assets only)
   const dates = [...new Set(allEntries.map((e) => e.date))].sort();
   const runningBalance: Record<number, number> = {};
-  for (const b of allBuckets) runningBalance[b.id] = 0;
+  for (const b of assetBuckets) runningBalance[b.id] = 0;
 
   const series: Record<string, number | string>[] = [];
   let idx = 0;
@@ -66,8 +74,8 @@ export default function Home() {
     series.push({ date, ...Object.fromEntries(Object.entries(runningBalance).map(([k, v]) => [k, v])) });
   }
 
-  // Only chart buckets with a non-zero current balance
-  const chartBuckets = allBuckets
+  // Only chart asset buckets with a non-zero current balance
+  const chartBuckets = assetBuckets
     .filter((b) => (balanceMap[b.id] ?? 0) !== 0)
     .map((b) => ({ id: b.id, name: b.name, currency: b.currency, currentBalance: balanceMap[b.id] }));
 
@@ -80,20 +88,38 @@ export default function Home() {
         <CreateBucketDialog bucketTypes={allTypes} />
       </div>
 
+      {/* Net Worth Summary */}
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="rounded-xl border p-5">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Assets</p>
+          <p className="text-2xl font-mono font-semibold">{formatCents(totalAssets)}</p>
+        </div>
+        <div className="rounded-xl border p-5">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Liabilities</p>
+          <p className="text-2xl font-mono font-semibold">{formatCents(totalLiabilities)}</p>
+        </div>
+        <div className="rounded-xl border p-5">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Net Worth</p>
+          <p className="text-2xl font-mono font-semibold">{formatCents(netWorth)}</p>
+        </div>
+      </div>
+
       {chartBuckets.length > 0 && (
-        <div className="grid grid-cols-2 gap-8 mb-10">
-          <div>
-            <h2 className="text-sm font-medium mb-4">Balance Breakdown</h2>
+        <div className="grid grid-cols-3 gap-8 mb-10">
+          <div className="col-span-1">
+            <h2 className="text-sm font-medium mb-4">Asset Breakdown</h2>
             <BalancePieChart buckets={chartBuckets} />
           </div>
-          <div>
-            <h2 className="text-sm font-medium mb-4">Balance History</h2>
+          <div className="col-span-2">
+            <h2 className="text-sm font-medium mb-4">Asset Balance History</h2>
             <BalanceHistoryChart buckets={chartBuckets} series={series} />
           </div>
         </div>
       )}
 
-      <Table>
+      {/* Assets Table */}
+      <h2 className="text-lg font-semibold mb-3">Assets</h2>
+      <Table className="mb-10">
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
@@ -106,7 +132,56 @@ export default function Home() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {allBuckets.map((bucket) => {
+          {assetBuckets.map((bucket) => {
+            const balance = balanceMap[bucket.id] ?? 0;
+            return (
+              <TableRow key={bucket.id}>
+                <TableCell className="font-medium">
+                  <Link href={`/buckets/${bucket.id}`} className="hover:underline">
+                    {bucket.name}
+                  </Link>
+                </TableCell>
+                <TableCell className="capitalize">{bucket.type.name}</TableCell>
+                <TableCell className="font-mono">{formatCents(balance, bucket.currency)}</TableCell>
+                <TableCell>{bucket.currency}</TableCell>
+                <TableCell>
+                  <Badge variant={bucket.status === "active" ? "default" : "secondary"} className="capitalize">
+                    {bucket.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>{bucket.createdAt}</TableCell>
+                <TableCell>
+                  <EditBucketDialog bucket={bucket} bucketTypes={allTypes} />
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+
+      {/* Liabilities Table */}
+      <h2 className="text-lg font-semibold mb-3">Liabilities</h2>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Amount Owed</TableHead>
+            <TableHead>Currency</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Created</TableHead>
+            <TableHead></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {liabilityBuckets.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center text-muted-foreground">
+                No liabilities recorded.
+              </TableCell>
+            </TableRow>
+          )}
+          {liabilityBuckets.map((bucket) => {
             const balance = balanceMap[bucket.id] ?? 0;
             return (
               <TableRow key={bucket.id}>
@@ -135,7 +210,3 @@ export default function Home() {
     </main>
   );
 }
-
-
-
-

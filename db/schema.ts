@@ -4,6 +4,9 @@ import { sql } from "drizzle-orm";
 export const bucketTypes = sqliteTable("bucket_types", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull().unique(),
+  kind: text("kind", { enum: ["asset", "liability"] })
+    .notNull()
+    .default("asset"),
   isSystem: integer("is_system", { mode: "boolean" }).notNull().default(false),
   createdAt: text("created_at")
     .notNull()
@@ -56,4 +59,3 @@ export const ledger = sqliteTable("ledger", {
     .notNull()
     .default(sql`(current_timestamp)`),
 });
-

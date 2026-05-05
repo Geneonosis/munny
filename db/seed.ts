@@ -2,8 +2,22 @@ import { db } from "./index";
 import { buckets, bucketTypes, categories, ledger } from "./schema";
 import { sql } from "drizzle-orm";
 
-const SYSTEM_BUCKET_TYPES = [
-  "checking", "savings", "credit", "cash", "investment", "crypto", "brokerage",
+const SYSTEM_BUCKET_TYPES: { name: string; kind: "asset" | "liability" }[] = [
+  // Assets
+  { name: "checking",    kind: "asset" },
+  { name: "savings",     kind: "asset" },
+  { name: "credit",      kind: "asset" },
+  { name: "cash",        kind: "asset" },
+  { name: "investment",  kind: "asset" },
+  { name: "crypto",      kind: "asset" },
+  { name: "brokerage",   kind: "asset" },
+  { name: "real estate", kind: "asset" },
+  { name: "vehicle",     kind: "asset" },
+  // Liabilities
+  { name: "mortgage",       kind: "liability" },
+  { name: "auto loan",      kind: "liability" },
+  { name: "personal loan",  kind: "liability" },
+  { name: "student loan",   kind: "liability" },
 ];
 
 const SYSTEM_CATEGORIES = [
@@ -22,8 +36,10 @@ const SYSTEM_CATEGORIES = [
 ];
 
 export async function seed() {
-  for (const name of SYSTEM_BUCKET_TYPES) {
-    db.run(sql`INSERT OR IGNORE INTO ${bucketTypes} (name, is_system) VALUES (${name}, 1)`);
+  for (const { name, kind } of SYSTEM_BUCKET_TYPES) {
+    db.run(sql`INSERT OR IGNORE INTO ${bucketTypes} (name, kind, is_system) VALUES (${name}, ${kind}, 1)`);
+    // Backfill kind for any rows that were inserted before this column existed
+    db.run(sql`UPDATE ${bucketTypes} SET kind = ${kind} WHERE name = ${name} AND kind != ${kind}`);
   }
   console.log("✓ Seeded system bucket types");
 
@@ -40,14 +56,20 @@ export async function seedDev() {
   const byName = Object.fromEntries(allTypes.map((t) => [t.name, t.id]));
 
   const mockBuckets = [
-    { name: "Chase Checking",      typeId: byName["checking"],   currency: "USD", status: "active" },
-    { name: "Chase Savings",       typeId: byName["savings"],    currency: "USD", status: "active" },
-    { name: "Amex Gold",           typeId: byName["credit"],     currency: "USD", status: "active" },
-    { name: "Wallet Cash",         typeId: byName["cash"],       currency: "USD", status: "active" },
-    { name: "Fidelity Brokerage",  typeId: byName["brokerage"],  currency: "USD", status: "active" },
-    { name: "Coinbase",            typeId: byName["crypto"],     currency: "USD", status: "active" },
-    { name: "Old Savings Account", typeId: byName["savings"],    currency: "USD", status: "archived" },
-    { name: "Robinhood",           typeId: byName["investment"],  currency: "USD", status: "deactivated" },
+    { name: "Chase Checking",      typeId: byName["checking"],       currency: "USD", status: "active" },
+    { name: "Chase Savings",       typeId: byName["savings"],        currency: "USD", status: "active" },
+    { name: "Amex Gold",           typeId: byName["credit"],         currency: "USD", status: "active" },
+    { name: "Wallet Cash",         typeId: byName["cash"],           currency: "USD", status: "active" },
+    { name: "Fidelity Brokerage",  typeId: byName["brokerage"],      currency: "USD", status: "active" },
+    { name: "Coinbase",            typeId: byName["crypto"],         currency: "USD", status: "active" },
+    { name: "Old Savings Account", typeId: byName["savings"],        currency: "USD", status: "archived" },
+    { name: "Robinhood",           typeId: byName["investment"],     currency: "USD", status: "deactivated" },
+    // Physical assets — paired with their liabilities below
+    { name: "Primary Residence",   typeId: byName["real estate"],    currency: "USD", status: "active" },
+    { name: "Toyota Camry",        typeId: byName["vehicle"],        currency: "USD", status: "active" },
+    // Liabilities
+    { name: "Home Mortgage",       typeId: byName["mortgage"],       currency: "USD", status: "active" },
+    { name: "Car Loan",            typeId: byName["auto loan"],      currency: "USD", status: "active" },
   ] as const;
 
   for (const bucket of mockBuckets) {
@@ -86,6 +108,18 @@ export async function seedDev() {
     // Coinbase
     { bucketId: bucketByName["Coinbase"],       amount:  50000, flow: "in",  note: "BTC purchase",         date: "2026-01-12", category: "savings & investment" },
     { bucketId: bucketByName["Coinbase"],       amount:  10000, flow: "out", note: "Sold ETH",             date: "2026-02-10", category: "savings & investment" },
+    // Primary Residence — market value of the home (asset side of the mortgage)
+    { bucketId: bucketByName["Primary Residence"], amount: 42000000, flow: "in",  note: "Purchase price",       date: "2026-01-01", category: "housing" },
+    // Toyota Camry — purchase value of the car (asset side of the auto loan)
+    { bucketId: bucketByName["Toyota Camry"],      amount:  3200000, flow: "in",  note: "Purchase price",       date: "2026-01-01", category: "transportation" },
+    // Home Mortgage — 'in' = loan principal taken on, 'out' = monthly payment reducing debt
+    { bucketId: bucketByName["Home Mortgage"],  amount: 32000000, flow: "in",  note: "Mortgage principal",   date: "2026-01-01", category: "housing" },
+    { bucketId: bucketByName["Home Mortgage"],  amount:   152000, flow: "out", note: "January payment",      date: "2026-01-31", category: "housing" },
+    { bucketId: bucketByName["Home Mortgage"],  amount:   152000, flow: "out", note: "February payment",     date: "2026-02-28", category: "housing" },
+    // Car Loan — principal taken on, monthly payments
+    { bucketId: bucketByName["Car Loan"],       amount:  2800000, flow: "in",  note: "Auto loan principal",  date: "2026-01-01", category: "transportation" },
+    { bucketId: bucketByName["Car Loan"],       amount:    49500, flow: "out", note: "January payment",      date: "2026-01-31", category: "transportation" },
+    { bucketId: bucketByName["Car Loan"],       amount:    49500, flow: "out", note: "February payment",     date: "2026-02-28", category: "transportation" },
   ] as const;
 
   for (const entry of mockEntries) {
@@ -99,4 +133,3 @@ export async function seedDev() {
   }
   console.log("✓ Seeded mock ledger entries");
 }
-

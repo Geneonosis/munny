@@ -1,0 +1,1 @@
+ALTER TABLE `bucket_types` ADD `kind` text DEFAULT 'asset' NOT NULL;

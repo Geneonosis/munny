@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type BucketType = { id: number; name: string };
+type BucketType = { id: number; name: string; kind: string };
 
 export function CreateBucketDialog({ bucketTypes }: { bucketTypes: BucketType[] }) {
   const router = useRouter();
@@ -75,8 +75,19 @@ export function CreateBucketDialog({ bucketTypes }: { bucketTypes: BucketType[] 
               <SelectValue placeholder="Select a type" />
             </SelectTrigger>
             <SelectContent>
-              {bucketTypes.map((t) => (
-                <SelectItem key={t.id} value={String(t.id)}>
+              <SelectItem value="__assets_header" disabled className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
+                Assets
+              </SelectItem>
+              {bucketTypes.filter((t) => t.kind === "asset").map((t) => (
+                <SelectItem key={t.id} value={String(t.id)} className="capitalize">
+                  {t.name}
+                </SelectItem>
+              ))}
+              <SelectItem value="__liabilities_header" disabled className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mt-1">
+                Liabilities
+              </SelectItem>
+              {bucketTypes.filter((t) => t.kind === "liability").map((t) => (
+                <SelectItem key={t.id} value={String(t.id)} className="capitalize">
                   {t.name}
                 </SelectItem>
               ))}
@@ -96,4 +107,3 @@ export function CreateBucketDialog({ bucketTypes }: { bucketTypes: BucketType[] 
     </Dialog>
   );
 }
-

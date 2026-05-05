@@ -38,6 +38,7 @@ export default async function BucketPage({ params }: Params) {
       status: buckets.status,
       createdAt: buckets.createdAt,
       type: bucketTypes.name,
+      kind: bucketTypes.kind,
     })
     .from(buckets)
     .innerJoin(bucketTypes, eq(buckets.typeId, bucketTypes.id))
@@ -95,7 +96,10 @@ export default async function BucketPage({ params }: Params) {
               {bucket.status}
             </Badge>
           </div>
-          <p className="text-3xl font-mono font-semibold mt-2">
+          <p className="text-xs text-muted-foreground mt-1">
+            {bucket.kind === "liability" ? "Amount Owed" : "Current Balance"}
+          </p>
+          <p className="text-3xl font-mono font-semibold">
             {formatCents(balance, bucket.currency)}
           </p>
         </div>
@@ -162,4 +166,3 @@ export default async function BucketPage({ params }: Params) {
     </main>
   );
 }
-
