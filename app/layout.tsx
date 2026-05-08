@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -17,7 +18,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn("h-full antialiased", "font-sans", geist.variable)}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      {/* Blocking script prevents flash of wrong theme */}
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function(){
+            var t = localStorage.getItem('munny-theme');
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (t === 'dark' || (!t && prefersDark)) {
+              document.documentElement.classList.add('dark');
+            }
+          })();
+        `}} />
+      </head>
+      <body className="min-h-full flex flex-col">
+        <div className="flex justify-end px-6 py-3 border-b">
+          <ThemeToggle />
+        </div>
+        {children}
+      </body>
     </html>
   );
 }

@@ -21,6 +21,56 @@ function formatCents(cents: number) {
   }).format(cents / 100);
 }
 
+function BucketTooltip({
+  series,
+  active,
+  payload,
+  label,
+}: {
+  series: BalancePoint[];
+  active?: boolean;
+  payload?: { name: string; value: number; color: string; dataKey: string }[];
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+  const currentIdx = series.findIndex((p) => p.date === label);
+  const prevPoint = currentIdx > 0 ? series[currentIdx - 1] : null;
+  return (
+    <div
+      style={{
+        background: "var(--popover)",
+        color: "var(--popover-foreground)",
+        border: "1px solid var(--border)",
+        borderRadius: 6,
+        padding: "8px 12px",
+        fontSize: 12,
+        minWidth: 180,
+      }}
+    >
+      <p style={{ marginBottom: 6, fontWeight: 600 }}>{label}</p>
+      {payload.map((p) => {
+        const prev = prevPoint ? prevPoint.balance : undefined;
+        const delta = prev !== undefined ? p.value - prev : null;
+        return (
+          <div key={p.dataKey} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: p.color, flexShrink: 0, display: "inline-block" }} />
+            <span style={{ flex: 1 }}>{p.name}</span>
+            <span style={{ fontVariantNumeric: "tabular-nums" }}>{formatCents(p.value)}</span>
+            {delta !== null && delta !== 0 && (
+              <span style={{ color: delta > 0 ? "#22c55e" : "#ef4444", fontVariantNumeric: "tabular-nums", minWidth: 60, textAlign: "right" }}>
+                {delta > 0 ? "+" : ""}{formatCents(delta)}
+              </span>
+            )}
+            {delta === 0 && (
+              <span style={{ color: "var(--muted-foreground)", minWidth: 60, textAlign: "right" }}>—</span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function BucketBalanceHistoryChart({ series }: { series: BalancePoint[] }) {
   const [range, setRange] = useState<[number, number]>([0, Math.max(0, series.length - 1)]);
 
@@ -38,10 +88,11 @@ export function BucketBalanceHistoryChart({ series }: { series: BalancePoint[] }
         <LineChart data={visible}>
           <XAxis dataKey="date" tick={{ fontSize: 11 }} />
           <YAxis tickFormatter={formatCents} tick={{ fontSize: 11 }} width={80} />
-          <Tooltip formatter={(v) => [formatCents(Number(v)), "Balance"]} />
+          <Tooltip content={(props) => <BucketTooltip series={series} active={props.active} payload={props.payload as unknown as { name: string; value: number; color: string; dataKey: string }[] | undefined} label={props.label as string | undefined} />} />
           <Line
             type="monotone"
             dataKey="balance"
+            name="Balance"
             stroke="var(--chart-1)"
             dot={false}
             strokeWidth={2}
@@ -66,4 +117,3 @@ export function BucketBalanceHistoryChart({ series }: { series: BalancePoint[] }
     </div>
   );
 }
-
