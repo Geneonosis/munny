@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ResponsiveSankey } from "@nivo/sankey";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -86,7 +86,8 @@ function buildSankeyData(rows: LedgerRow[], month: string) {
   return { nodes, links, totalIncome, totalOutflows, deficitAmount };
 }
 
-const NODE_COLORS: Record<string, string> = {
+// Stable set of named node colors — bright enough for both light and dark
+const NAMED_COLORS: Record<string, string> = {
   Income: "var(--chart-1)",
   Retained: "var(--chart-2)",
   Deficit: "var(--chart-5)",
@@ -103,6 +104,15 @@ const CATEGORY_PALETTE = [
 export function LedgerSankeyChart({ rows }: { rows: LedgerRow[] }) {
   const months = useMemo(() => getAvailableMonths(rows), [rows]);
   const [selectedMonth, setSelectedMonth] = useState(months[0] ?? "");
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const update = () => setIsDark(document.documentElement.classList.contains("dark"));
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   const result = useMemo(
     () => (selectedMonth ? buildSankeyData(rows, selectedMonth) : null),
@@ -117,7 +127,7 @@ export function LedgerSankeyChart({ rows }: { rows: LedgerRow[] }) {
     .filter((n) => n.id !== "Income" && n.id !== "Deficit" && n.id !== "Retained")
     .map((n) => n.id) ?? [];
 
-  const nodeColorMap: Record<string, string> = { ...NODE_COLORS };
+  const nodeColorMap: Record<string, string> = { ...NAMED_COLORS };
   categoryNodes.forEach((name, i) => {
     nodeColorMap[name] = CATEGORY_PALETTE[i % CATEGORY_PALETTE.length];
   });
@@ -125,7 +135,7 @@ export function LedgerSankeyChart({ rows }: { rows: LedgerRow[] }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
-          <Select value={selectedMonth} onValueChange={(v) => v && setSelectedMonth(v)}>
+        <Select value={selectedMonth} onValueChange={(v) => v && setSelectedMonth(v)}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Select month" />
           </SelectTrigger>
@@ -160,15 +170,24 @@ export function LedgerSankeyChart({ rows }: { rows: LedgerRow[] }) {
             nodeInnerPadding={3}
             nodeSpacing={24}
             nodeBorderWidth={0}
-            linkOpacity={0.35}
+            linkOpacity={isDark ? 0.6 : 0.35}
+            linkBlendMode={isDark ? "screen" : "multiply"}
             enableLinkGradient
             labelPosition="outside"
             labelOrientation="horizontal"
             labelPadding={10}
             label={(node) => `${node.id} · ${formatCents(node.value)}`}
+            labelTextColor={isDark ? "#f9fafb" : "#111827"}
             theme={{
-              labels: { text: { fontSize: 11, fill: "var(--foreground)" } },
-              tooltip: { container: { background: "var(--popover)", color: "var(--popover-foreground)", fontSize: 12 } },
+              labels: { text: { fontSize: 11, fill: isDark ? "#f9fafb" : "#111827" } },
+              tooltip: {
+                container: {
+                  background: isDark ? "#1f2937" : "#ffffff",
+                  color: isDark ? "#f9fafb" : "#111827",
+                  fontSize: 12,
+                  border: "1px solid " + (isDark ? "#374151" : "#e5e7eb"),
+                },
+              },
             }}
           />
         </div>
@@ -176,4 +195,3 @@ export function LedgerSankeyChart({ rows }: { rows: LedgerRow[] }) {
     </div>
   );
 }
-
