@@ -1,26 +1,20 @@
 export const dynamic = "force-dynamic";
 
-import { notFound } from "next/navigation";
+import { eq } from "drizzle-orm";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { AddTransactionDialog } from "@/components/add-transaction-dialog";
+import { BucketBalanceHistoryChart } from "@/components/bucket-balance-history-chart";
+import { LedgerSankeyChart } from "@/components/ledger-sankey-chart";
+import { LedgerTable } from "@/components/ledger-table";
+import { Badge } from "@/components/ui/badge";
 import { db } from "@/db";
 import { buckets, bucketTypes, categories, ledger } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { AddTransactionDialog } from "@/components/add-transaction-dialog";
-import { EditTransactionDialog } from "@/components/edit-transaction-dialog";
-import { LedgerSankeyChart } from "@/components/ledger-sankey-chart";
-import { BucketBalanceHistoryChart } from "@/components/bucket-balance-history-chart";
 
 function formatCents(cents: number, currency = "USD") {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
+  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(
+    cents / 100
+  );
 }
 
 type Params = { params: Promise<{ id: string }> };
@@ -28,7 +22,7 @@ type Params = { params: Promise<{ id: string }> };
 export default async function BucketPage({ params }: Params) {
   const { id } = await params;
   const numId = Number(id);
-  if (isNaN(numId)) notFound();
+  if (Number.isNaN(numId)) notFound();
 
   const bucket = db
     .select({
@@ -65,21 +59,30 @@ export default async function BucketPage({ params }: Params) {
 
   const allCategories = db.select().from(categories).all();
 
-  // Compute running balance per row immutably
-  const rows = entries.reduce<Array<typeof entries[number] & { running: number }>>(
-    (acc, e) => {
-      const prev = acc.at(-1)?.running ?? 0;
-      return [...acc, { ...e, running: prev + (e.flow === "in" ? e.amount : -e.amount) }];
-    },
-    []
-  );
+  // Compute running balance per row in ascending (chronological) order
+  const rowsAsc = entries.reduce<
+    Array<(typeof entries)[number] & { running: number }>
+  >((acc, e) => {
+    const prev = acc.at(-1)?.running ?? 0;
+    acc.push({
+      ...e,
+      running: prev + (e.flow === "in" ? e.amount : -e.amount),
+    });
+    return acc;
+  }, []);
 
-  const balance = rows.at(-1)?.running ?? 0;
+  // Most recent first for the ledger table display
+  const rows = [...rowsAsc].reverse();
+
+  const balance = rowsAsc.at(-1)?.running ?? 0;
 
   return (
     <main className="p-8">
       <div className="mb-6">
-        <Link href="/" className="text-sm text-muted-foreground hover:underline">
+        <Link
+          href="/"
+          className="text-sm text-muted-foreground hover:underline"
+        >
           ← Buckets
         </Link>
       </div>
@@ -92,7 +95,10 @@ export default async function BucketPage({ params }: Params) {
             <span>·</span>
             <span>{bucket.currency}</span>
             <span>·</span>
-            <Badge variant={bucket.status === "active" ? "default" : "secondary"} className="capitalize">
+            <Badge
+              variant={bucket.status === "active" ? "default" : "secondary"}
+              className="capitalize"
+            >
               {bucket.status}
             </Badge>
           </div>
@@ -103,71 +109,39 @@ export default async function BucketPage({ params }: Params) {
             {formatCents(balance, bucket.currency)}
           </p>
         </div>
-        <AddTransactionDialog bucketId={bucket.id} availableCategories={allCategories} currentBalance={balance} />
+        <AddTransactionDialog
+          bucketId={bucket.id}
+          availableCategories={allCategories}
+          currentBalance={balance}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="rounded-xl border p-6">
           <h2 className="text-sm font-semibold mb-4">Monthly Flow</h2>
-          <LedgerSankeyChart rows={rows} />
+          <LedgerSankeyChart rows={rowsAsc} />
         </div>
         <div className="rounded-xl border p-6">
           <h2 className="text-sm font-semibold mb-4">Balance History</h2>
           <BucketBalanceHistoryChart
             series={Object.values(
-              rows.reduce<Record<string, { date: string; balance: number }>>((acc, r) => {
-                acc[r.date] = { date: r.date, balance: r.running };
-                return acc;
-              }, {})
+              rowsAsc.reduce<Record<string, { date: string; balance: number }>>(
+                (acc, r) => {
+                  acc[r.date] = { date: r.date, balance: r.running };
+                  return acc;
+                },
+                {}
+              )
             )}
           />
         </div>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Note</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Direction</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Balance</TableHead>
-            <TableHead></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground">
-                No transactions yet.
-              </TableCell>
-            </TableRow>
-          )}
-          {rows.map((row) => (
-            <TableRow key={row.id}>
-              <TableCell>{row.date}</TableCell>
-              <TableCell>{row.note ?? <span className="text-muted-foreground">—</span>}</TableCell>
-              <TableCell className="capitalize">
-                {row.categoryName ?? <span className="text-muted-foreground">—</span>}
-              </TableCell>
-              <TableCell>
-                <Badge variant={row.flow === "in" ? "default" : "secondary"}>
-                  {row.flow === "in" ? "In" : "Out"}
-                </Badge>
-              </TableCell>
-              <TableCell className="font-mono">
-                {row.flow === "out" && "-"}
-                {formatCents(row.amount, bucket.currency)}
-              </TableCell>
-              <TableCell className="font-mono">{formatCents(row.running, bucket.currency)}</TableCell>
-              <TableCell>
-                <EditTransactionDialog row={row} availableCategories={allCategories} />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <LedgerTable
+        rows={rows}
+        currency={bucket.currency}
+        availableCategories={allCategories}
+      />
     </main>
   );
 }

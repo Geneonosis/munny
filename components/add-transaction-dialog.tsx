@@ -1,11 +1,23 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Category = { id: number; name: string };
 
@@ -38,7 +50,7 @@ export function AddTransactionDialog({
   // Computed delta preview for balance mode
   const balanceDeltaCents = (() => {
     const parsed = parseFloat(newBalance);
-    if (isNaN(parsed)) return null;
+    if (Number.isNaN(parsed)) return null;
     return Math.round(parsed * 100) - currentBalance;
   })();
 
@@ -64,7 +76,9 @@ export function AddTransactionDialog({
 
     if (mode === "balance") {
       if (balanceDeltaCents === null || balanceDeltaCents === 0) {
-        setError("New balance is the same as the current balance — no adjustment needed.");
+        setError(
+          "New balance is the same as the current balance — no adjustment needed."
+        );
         setLoading(false);
         return;
       }
@@ -106,11 +120,19 @@ export function AddTransactionDialog({
   const currentBalanceDollars = (currentBalance / 100).toFixed(2);
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (!v) resetForm();
+      }}
+    >
       <DialogTrigger render={<Button />}>Add Transaction</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{mode === "balance" ? "Set Balance" : "Add Transaction"}</DialogTitle>
+          <DialogTitle>
+            {mode === "balance" ? "Set Balance" : "Add Transaction"}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 pt-2">
           {/* Mode toggle */}
@@ -142,7 +164,11 @@ export function AddTransactionDialog({
                 onChange={(e) => setAmount(e.target.value)}
                 required
               />
-              <Select value={flow} onValueChange={(v) => setFlow(v ?? "")} required>
+              <Select
+                value={flow}
+                onValueChange={(v) => setFlow(v ?? "")}
+                required
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Direction" />
                 </SelectTrigger>
@@ -155,7 +181,8 @@ export function AddTransactionDialog({
           ) : (
             <div className="flex flex-col gap-1.5">
               <p className="text-xs text-muted-foreground">
-                Current balance: <span className="font-medium">${currentBalanceDollars}</span>
+                Current balance:{" "}
+                <span className="font-medium">${currentBalanceDollars}</span>
               </p>
               <Input
                 type="number"
@@ -166,19 +193,30 @@ export function AddTransactionDialog({
                 required
               />
               {balanceDeltaCents !== null && balanceDeltaCents !== 0 && (
-                <p className={`text-xs font-medium ${balanceDeltaCents > 0 ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>
+                <p
+                  className={`text-xs font-medium ${balanceDeltaCents > 0 ? "text-green-600 dark:text-green-400" : "text-destructive"}`}
+                >
                   {balanceDeltaCents > 0 ? "+" : ""}
-                  {(balanceDeltaCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })} will be recorded as a{" "}
+                  {(balanceDeltaCents / 100).toLocaleString("en-US", {
+                    style: "currency",
+                    currency: "USD",
+                  })}{" "}
+                  will be recorded as a{" "}
                   {balanceDeltaCents > 0 ? "Money In" : "Money Out"} adjustment
                 </p>
               )}
               {balanceDeltaCents === 0 && newBalance !== "" && (
-                <p className="text-xs text-muted-foreground">No change from current balance.</p>
+                <p className="text-xs text-muted-foreground">
+                  No change from current balance.
+                </p>
               )}
             </div>
           )}
 
-          <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "")}>
+          <Select
+            value={categoryId}
+            onValueChange={(v) => setCategoryId(v ?? "")}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Category (optional)" />
             </SelectTrigger>
@@ -191,7 +229,11 @@ export function AddTransactionDialog({
             </SelectContent>
           </Select>
           <Input
-            placeholder={mode === "balance" ? "Note (optional, defaults to 'Balance adjustment')" : "Note (optional)"}
+            placeholder={
+              mode === "balance"
+                ? "Note (optional, defaults to 'Balance adjustment')"
+                : "Note (optional)"
+            }
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
@@ -210,4 +252,3 @@ export function AddTransactionDialog({
     </Dialog>
   );
 }
-

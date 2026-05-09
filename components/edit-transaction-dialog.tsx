@@ -1,11 +1,23 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Category = { id: number; name: string };
 
@@ -31,7 +43,9 @@ export function EditTransactionDialog({
   const [flow, setFlow] = useState(row.flow);
   const [note, setNote] = useState(row.note ?? "");
   const [date, setDate] = useState(row.date);
-  const [categoryId, setCategoryId] = useState(row.categoryId ? String(row.categoryId) : "");
+  const [categoryId, setCategoryId] = useState(
+    row.categoryId ? String(row.categoryId) : ""
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,7 +94,9 @@ export function EditTransactionDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
-      <DialogTrigger render={<Button variant="ghost" size="sm" />}>Edit</DialogTrigger>
+      <DialogTrigger render={<Button variant="ghost" size="sm" />}>
+        Edit
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Transaction</DialogTitle>
@@ -104,7 +120,10 @@ export function EditTransactionDialog({
               <SelectItem value="out">Money Out</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "")}>
+          <Select
+            value={categoryId}
+            onValueChange={(v) => setCategoryId(v ?? "")}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Category (optional)" />
             </SelectTrigger>
@@ -137,4 +156,3 @@ export function EditTransactionDialog({
     </Dialog>
   );
 }
-

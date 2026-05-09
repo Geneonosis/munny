@@ -1,11 +1,23 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type BucketType = { id: number; name: string; kind: string };
 
@@ -71,7 +83,9 @@ export function EditBucketDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
-      <DialogTrigger render={<Button variant="ghost" size="sm" />}>Edit</DialogTrigger>
+      <DialogTrigger render={<Button variant="ghost" size="sm" />}>
+        Edit
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Bucket</DialogTitle>
@@ -88,22 +102,42 @@ export function EditBucketDialog({
               <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__assets_header" disabled className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
+              <SelectItem
+                value="__assets_header"
+                disabled
+                className="text-xs text-muted-foreground font-semibold uppercase tracking-wide"
+              >
                 Assets
               </SelectItem>
-              {bucketTypes.filter((t) => t.kind === "asset").map((t) => (
-                <SelectItem key={t.id} value={String(t.id)} className="capitalize">
-                  {t.name}
-                </SelectItem>
-              ))}
-              <SelectItem value="__liabilities_header" disabled className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mt-1">
+              {bucketTypes
+                .filter((t) => t.kind === "asset")
+                .map((t) => (
+                  <SelectItem
+                    key={t.id}
+                    value={String(t.id)}
+                    className="capitalize"
+                  >
+                    {t.name}
+                  </SelectItem>
+                ))}
+              <SelectItem
+                value="__liabilities_header"
+                disabled
+                className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mt-1"
+              >
                 Liabilities
               </SelectItem>
-              {bucketTypes.filter((t) => t.kind === "liability").map((t) => (
-                <SelectItem key={t.id} value={String(t.id)} className="capitalize">
-                  {t.name}
-                </SelectItem>
-              ))}
+              {bucketTypes
+                .filter((t) => t.kind === "liability")
+                .map((t) => (
+                  <SelectItem
+                    key={t.id}
+                    value={String(t.id)}
+                    className="capitalize"
+                  >
+                    {t.name}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
           <Input

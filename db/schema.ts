@@ -1,5 +1,5 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const bucketTypes = sqliteTable("bucket_types", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -8,9 +8,7 @@ export const bucketTypes = sqliteTable("bucket_types", {
     .notNull()
     .default("asset"),
   isSystem: integer("is_system", { mode: "boolean" }).notNull().default(false),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(current_timestamp)`),
+  createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
 });
 
 export const buckets = sqliteTable("buckets", {
@@ -25,21 +23,15 @@ export const buckets = sqliteTable("buckets", {
   })
     .notNull()
     .default("active"),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(current_timestamp)`),
-  updatedAt: text("updated_at")
-    .notNull()
-    .default(sql`(current_timestamp)`),
+  createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
+  updatedAt: text("updated_at").notNull().default(sql`(current_timestamp)`),
 });
 
 export const categories = sqliteTable("categories", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull().unique(),
   isSystem: integer("is_system", { mode: "boolean" }).notNull().default(false),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(current_timestamp)`),
+  createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
 });
 
 export const ledger = sqliteTable("ledger", {
@@ -55,7 +47,5 @@ export const ledger = sqliteTable("ledger", {
   note: text("note"),
   // The actual date of the transaction (ISO 8601 date string: YYYY-MM-DD)
   date: text("date").notNull(),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(current_timestamp)`),
+  createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
 });

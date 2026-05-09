@@ -1,19 +1,16 @@
 export const dynamic = "force-dynamic";
 
-import { db } from "@/db";
-import { ledger, buckets } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { json, error } from "../_lib/response";
+import { db } from "@/db";
+import { buckets, ledger } from "@/db/schema";
+import { error, json } from "../_lib/response";
 
 // GET /api/ledger?bucketId=1 — list entries, optionally filtered by bucket
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const bucketId = searchParams.get("bucketId");
 
-  const query = db
-    .select()
-    .from(ledger)
-    .orderBy(ledger.date);
+  const query = db.select().from(ledger).orderBy(ledger.date);
 
   const results = bucketId
     ? query.where(eq(ledger.bucketId, Number(bucketId))).all()
@@ -33,12 +30,17 @@ export async function POST(req: Request) {
   const date = body?.date?.trim();
   const categoryId = body?.categoryId ? Number(body.categoryId) : null;
 
-  if (!bucketId || isNaN(bucketId)) return error("bucketId is required");
-  if (!amount || isNaN(amount) || amount <= 0) return error("amount must be a positive number (in cents)");
+  if (!bucketId || Number.isNaN(bucketId)) return error("bucketId is required");
+  if (!amount || Number.isNaN(amount) || amount <= 0)
+    return error("amount must be a positive number (in cents)");
   if (!["in", "out"].includes(flow)) return error("flow must be 'in' or 'out'");
   if (!date) return error("date is required (YYYY-MM-DD)");
 
-  const bucket = db.select().from(buckets).where(eq(buckets.id, bucketId)).get();
+  const bucket = db
+    .select()
+    .from(buckets)
+    .where(eq(buckets.id, bucketId))
+    .get();
   if (!bucket) return error("bucket not found", 404);
 
   const created = db
@@ -49,4 +51,3 @@ export async function POST(req: Request) {
 
   return json(created, 201);
 }
-

@@ -1,8 +1,8 @@
 export const dynamic = "force-dynamic";
 
-import { db } from "@/db";
-import { ledger, buckets, bucketTypes } from "@/db/schema";
 import { eq, ne } from "drizzle-orm";
+import { db } from "@/db";
+import { buckets, bucketTypes, ledger } from "@/db/schema";
 import { json } from "../../_lib/response";
 
 export async function GET() {
@@ -46,7 +46,10 @@ export async function GET() {
       }
       entryIdx++;
     }
-    series.push({ date, ...Object.fromEntries(Object.entries(balanceMap).map(([k, v]) => [k, v])) });
+    series.push({
+      date,
+      ...Object.fromEntries(Object.entries(balanceMap).map(([k, v]) => [k, v])),
+    });
   }
 
   // Determine which buckets have non-zero balance at the end
@@ -58,4 +61,3 @@ export async function GET() {
 
   return json({ buckets: activeBuckets, series });
 }
-

@@ -19,7 +19,8 @@ export function getChartColor(index: number): string {
  * Given a list of items (by any key), returns a stable map of key → color.
  * Stable meaning the same list always produces the same color assignments.
  */
-export function buildColorMap(keys: (string | number)[]): Record<string, string> {
+export function buildColorMap(
+  keys: (string | number)[]
+): Record<string, string> {
   return Object.fromEntries(keys.map((k, i) => [String(k), getChartColor(i)]));
 }
-

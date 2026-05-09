@@ -1,8 +1,14 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
 import { ResponsiveSankey } from "@nivo/sankey";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type LedgerRow = {
   id: number;
@@ -39,7 +45,10 @@ function buildSankeyData(rows: LedgerRow[], month: string) {
     outflowByCategory[cat] = (outflowByCategory[cat] ?? 0) + r.amount;
   }
 
-  const totalOutflows = Object.values(outflowByCategory).reduce((s, v) => s + v, 0);
+  const totalOutflows = Object.values(outflowByCategory).reduce(
+    (s, v) => s + v,
+    0
+  );
 
   if (totalIncome === 0 && totalOutflows === 0) return null;
 
@@ -71,12 +80,18 @@ function buildSankeyData(rows: LedgerRow[], month: string) {
       const catAmount = outflowByCategory[cat];
       const incomeShare = Math.round(totalIncome * (catAmount / totalOutflows));
       const defShare = catAmount - incomeShare;
-      if (incomeShare > 0) links.push({ source: "Income", target: cat, value: incomeShare });
-      if (defShare > 0) links.push({ source: "Deficit", target: cat, value: defShare });
+      if (incomeShare > 0)
+        links.push({ source: "Income", target: cat, value: incomeShare });
+      if (defShare > 0)
+        links.push({ source: "Deficit", target: cat, value: defShare });
     }
   } else {
     for (const cat of categoryNames) {
-      links.push({ source: "Income", target: cat, value: outflowByCategory[cat] });
+      links.push({
+        source: "Income",
+        target: cat,
+        value: outflowByCategory[cat],
+      });
     }
     if (surplus > 0) {
       links.push({ source: "Income", target: "Retained", value: surplus });
@@ -107,10 +122,14 @@ export function LedgerSankeyChart({ rows }: { rows: LedgerRow[] }) {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    const update = () => setIsDark(document.documentElement.classList.contains("dark"));
+    const update = () =>
+      setIsDark(document.documentElement.classList.contains("dark"));
     update();
     const observer = new MutationObserver(update);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
     return () => observer.disconnect();
   }, []);
 
@@ -120,12 +139,19 @@ export function LedgerSankeyChart({ rows }: { rows: LedgerRow[] }) {
   );
 
   if (months.length === 0) {
-    return <p className="text-muted-foreground text-sm">No transactions recorded yet.</p>;
+    return (
+      <p className="text-muted-foreground text-sm">
+        No transactions recorded yet.
+      </p>
+    );
   }
 
-  const categoryNodes = result?.nodes
-    .filter((n) => n.id !== "Income" && n.id !== "Deficit" && n.id !== "Retained")
-    .map((n) => n.id) ?? [];
+  const categoryNodes =
+    result?.nodes
+      .filter(
+        (n) => n.id !== "Income" && n.id !== "Deficit" && n.id !== "Retained"
+      )
+      .map((n) => n.id) ?? [];
 
   const nodeColorMap: Record<string, string> = { ...NAMED_COLORS };
   categoryNodes.forEach((name, i) => {
@@ -135,14 +161,20 @@ export function LedgerSankeyChart({ rows }: { rows: LedgerRow[] }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <Select value={selectedMonth} onValueChange={(v) => v && setSelectedMonth(v)}>
+        <Select
+          value={selectedMonth}
+          onValueChange={(v) => v && setSelectedMonth(v)}
+        >
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Select month" />
           </SelectTrigger>
           <SelectContent>
             {months.map((m) => (
               <SelectItem key={m} value={m}>
-                {new Date(`${m}-01`).toLocaleDateString("en-US", { year: "numeric", month: "long" })}
+                {new Date(`${m}-01`).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                })}
               </SelectItem>
             ))}
           </SelectContent>
@@ -155,9 +187,13 @@ export function LedgerSankeyChart({ rows }: { rows: LedgerRow[] }) {
       </div>
 
       {!result ? (
-        <p className="text-muted-foreground text-sm">No transactions recorded for this period.</p>
+        <p className="text-muted-foreground text-sm">
+          No transactions recorded for this period.
+        </p>
       ) : result.nodes.length < 2 || result.links.length === 0 ? (
-        <p className="text-muted-foreground text-sm">Not enough data to render flow chart.</p>
+        <p className="text-muted-foreground text-sm">
+          Not enough data to render flow chart.
+        </p>
       ) : (
         <div style={{ height: 300 }}>
           <ResponsiveSankey
@@ -179,13 +215,15 @@ export function LedgerSankeyChart({ rows }: { rows: LedgerRow[] }) {
             label={(node) => `${node.id} · ${formatCents(node.value)}`}
             labelTextColor={isDark ? "#f9fafb" : "#111827"}
             theme={{
-              labels: { text: { fontSize: 11, fill: isDark ? "#f9fafb" : "#111827" } },
+              labels: {
+                text: { fontSize: 11, fill: isDark ? "#f9fafb" : "#111827" },
+              },
               tooltip: {
                 container: {
                   background: isDark ? "#1f2937" : "#ffffff",
                   color: isDark ? "#f9fafb" : "#111827",
                   fontSize: 12,
-                  border: "1px solid " + (isDark ? "#374151" : "#e5e7eb"),
+                  border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
                 },
               },
             }}

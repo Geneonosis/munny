@@ -1,9 +1,9 @@
 export const dynamic = "force-dynamic";
 
+import { eq, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { buckets, bucketTypes } from "@/db/schema";
-import { eq, ne } from "drizzle-orm";
-import { json, error } from "../_lib/response";
+import { error, json } from "../_lib/response";
 
 // GET /api/buckets — list all non-deleted buckets
 export async function GET() {
@@ -37,9 +37,13 @@ export async function POST(req: Request) {
   const currency = body?.currency?.trim() ?? "USD";
 
   if (!name) return error("name is required");
-  if (!typeId || isNaN(typeId)) return error("typeId is required");
+  if (!typeId || Number.isNaN(typeId)) return error("typeId is required");
 
-  const type = db.select().from(bucketTypes).where(eq(bucketTypes.id, typeId)).get();
+  const type = db
+    .select()
+    .from(bucketTypes)
+    .where(eq(bucketTypes.id, typeId))
+    .get();
   if (!type) return error("bucket type not found", 404);
 
   const created = db
@@ -50,4 +54,3 @@ export async function POST(req: Request) {
 
   return json(created, 201);
 }
-

@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import {
-  LineChart,
   Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
 } from "recharts";
 import { Slider } from "@/components/ui/slider";
 
@@ -52,17 +52,52 @@ function BucketTooltip({
         const prev = prevPoint ? prevPoint.balance : undefined;
         const delta = prev !== undefined ? p.value - prev : null;
         return (
-          <div key={p.dataKey} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: p.color, flexShrink: 0, display: "inline-block" }} />
+          <div
+            key={p.dataKey}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              marginBottom: 3,
+            }}
+          >
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: p.color,
+                flexShrink: 0,
+                display: "inline-block",
+              }}
+            />
             <span style={{ flex: 1 }}>{p.name}</span>
-            <span style={{ fontVariantNumeric: "tabular-nums" }}>{formatCents(p.value)}</span>
+            <span style={{ fontVariantNumeric: "tabular-nums" }}>
+              {formatCents(p.value)}
+            </span>
             {delta !== null && delta !== 0 && (
-              <span style={{ color: delta > 0 ? "#22c55e" : "#ef4444", fontVariantNumeric: "tabular-nums", minWidth: 60, textAlign: "right" }}>
-                {delta > 0 ? "+" : ""}{formatCents(delta)}
+              <span
+                style={{
+                  color: delta > 0 ? "#22c55e" : "#ef4444",
+                  fontVariantNumeric: "tabular-nums",
+                  minWidth: 60,
+                  textAlign: "right",
+                }}
+              >
+                {delta > 0 ? "+" : ""}
+                {formatCents(delta)}
               </span>
             )}
             {delta === 0 && (
-              <span style={{ color: "var(--muted-foreground)", minWidth: 60, textAlign: "right" }}>—</span>
+              <span
+                style={{
+                  color: "var(--muted-foreground)",
+                  minWidth: 60,
+                  textAlign: "right",
+                }}
+              >
+                —
+              </span>
             )}
           </div>
         );
@@ -71,11 +106,22 @@ function BucketTooltip({
   );
 }
 
-export function BucketBalanceHistoryChart({ series }: { series: BalancePoint[] }) {
-  const [range, setRange] = useState<[number, number]>([0, Math.max(0, series.length - 1)]);
+export function BucketBalanceHistoryChart({
+  series,
+}: {
+  series: BalancePoint[];
+}) {
+  const [range, setRange] = useState<[number, number]>([
+    0,
+    Math.max(0, series.length - 1),
+  ]);
 
   if (series.length === 0) {
-    return <p className="text-muted-foreground text-sm">No transaction history yet.</p>;
+    return (
+      <p className="text-muted-foreground text-sm">
+        No transaction history yet.
+      </p>
+    );
   }
 
   const visible = series.slice(range[0], range[1] + 1);
@@ -100,7 +146,25 @@ export function BucketBalanceHistoryChart({ series }: { series: BalancePoint[] }
             width={80}
             domain={[yMin ?? "auto", yMax]}
           />
-          <Tooltip content={(props) => <BucketTooltip series={series} active={props.active} payload={props.payload as unknown as { name: string; value: number; color: string; dataKey: string }[] | undefined} label={props.label as string | undefined} />} />
+          <Tooltip
+            content={(props) => (
+              <BucketTooltip
+                series={series}
+                active={props.active}
+                payload={
+                  props.payload as unknown as
+                    | {
+                        name: string;
+                        value: number;
+                        color: string;
+                        dataKey: string;
+                      }[]
+                    | undefined
+                }
+                label={props.label as string | undefined}
+              />
+            )}
+          />
           <Line
             type="monotone"
             dataKey="balance"

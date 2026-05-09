@@ -25,4 +25,3 @@ export const db = new Proxy({} as DbInstance, {
     return getInstance()[prop as keyof DbInstance];
   },
 });
-

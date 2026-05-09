@@ -1,13 +1,18 @@
 export const dynamic = "force-dynamic";
 
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { buckets, bucketTypes } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { json, error } from "../../_lib/response";
+import { error, json } from "../../_lib/response";
 
 type Params = { params: Promise<{ id: string }> };
 
-const VALID_STATUSES = ["active", "archived", "deactivated", "deleted"] as const;
+const VALID_STATUSES = [
+  "active",
+  "archived",
+  "deactivated",
+  "deleted",
+] as const;
 
 function getBucket(id: number) {
   return db
@@ -34,7 +39,7 @@ function getBucket(id: number) {
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params;
   const numId = Number(id);
-  if (isNaN(numId)) return error("invalid id");
+  if (Number.isNaN(numId)) return error("invalid id");
 
   const bucket = getBucket(numId);
   if (!bucket) return error("not found", 404);
@@ -45,7 +50,7 @@ export async function GET(_req: Request, { params }: Params) {
 export async function PATCH(req: Request, { params }: Params) {
   const { id } = await params;
   const numId = Number(id);
-  if (isNaN(numId)) return error("invalid id");
+  if (Number.isNaN(numId)) return error("invalid id");
 
   const existing = db.select().from(buckets).where(eq(buckets.id, numId)).get();
   if (!existing) return error("not found", 404);
@@ -54,11 +59,16 @@ export async function PATCH(req: Request, { params }: Params) {
   const updates: Partial<typeof existing> = {};
 
   if (body?.name !== undefined) updates.name = String(body.name).trim();
-  if (body?.currency !== undefined) updates.currency = String(body.currency).trim();
+  if (body?.currency !== undefined)
+    updates.currency = String(body.currency).trim();
   if (body?.typeId !== undefined) {
     const typeId = Number(body.typeId);
-    if (isNaN(typeId)) return error("invalid typeId");
-    const type = db.select().from(bucketTypes).where(eq(bucketTypes.id, typeId)).get();
+    if (Number.isNaN(typeId)) return error("invalid typeId");
+    const type = db
+      .select()
+      .from(bucketTypes)
+      .where(eq(bucketTypes.id, typeId))
+      .get();
     if (!type) return error("bucket type not found", 404);
     updates.typeId = typeId;
   }
@@ -69,7 +79,8 @@ export async function PATCH(req: Request, { params }: Params) {
     updates.status = body.status;
   }
 
-  if (Object.keys(updates).length === 0) return error("no valid fields to update");
+  if (Object.keys(updates).length === 0)
+    return error("no valid fields to update");
 
   updates.updatedAt = new Date().toISOString();
 
@@ -81,7 +92,7 @@ export async function PATCH(req: Request, { params }: Params) {
 export async function DELETE(_req: Request, { params }: Params) {
   const { id } = await params;
   const numId = Number(id);
-  if (isNaN(numId)) return error("invalid id");
+  if (Number.isNaN(numId)) return error("invalid id");
 
   const existing = db.select().from(buckets).where(eq(buckets.id, numId)).get();
   if (!existing) return error("not found", 404);
@@ -93,4 +104,3 @@ export async function DELETE(_req: Request, { params }: Params) {
 
   return json({ deleted: true });
 }
-

@@ -1,9 +1,9 @@
 export const dynamic = "force-dynamic";
 
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { categories } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { json, error } from "../_lib/response";
+import { error, json } from "../_lib/response";
 
 // GET /api/categories
 export async function GET() {
@@ -16,10 +16,17 @@ export async function POST(req: Request) {
   const name = body?.name?.trim();
   if (!name) return error("name is required");
 
-  const existing = db.select().from(categories).where(eq(categories.name, name)).get();
+  const existing = db
+    .select()
+    .from(categories)
+    .where(eq(categories.name, name))
+    .get();
   if (existing) return error("a category with that name already exists", 409);
 
-  const created = db.insert(categories).values({ name, isSystem: false }).returning().get();
+  const created = db
+    .insert(categories)
+    .values({ name, isSystem: false })
+    .returning()
+    .get();
   return json(created, 201);
 }
-

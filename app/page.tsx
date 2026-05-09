@@ -1,9 +1,12 @@
 export const dynamic = "force-dynamic";
 
-import Link from "next/link";
-import { db } from "@/db";
-import { buckets, bucketTypes, ledger } from "@/db/schema";
 import { eq, ne } from "drizzle-orm";
+import Link from "next/link";
+import { BalanceHistoryChart } from "@/components/balance-history-chart";
+import { BalancePieChart } from "@/components/balance-pie-chart";
+import { CreateBucketDialog } from "@/components/create-bucket-dialog";
+import { EditBucketDialog } from "@/components/edit-bucket-dialog";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -12,14 +15,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { CreateBucketDialog } from "@/components/create-bucket-dialog";
-import { EditBucketDialog } from "@/components/edit-bucket-dialog";
-import { BalancePieChart } from "@/components/balance-pie-chart";
-import { BalanceHistoryChart } from "@/components/balance-history-chart";
+import { db } from "@/db";
+import { buckets, bucketTypes, ledger } from "@/db/schema";
 
 function formatCents(cents: number, currency = "USD") {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
+  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(
+    cents / 100
+  );
 }
 
 export default function Home() {
@@ -30,7 +32,11 @@ export default function Home() {
       currency: buckets.currency,
       status: buckets.status,
       createdAt: buckets.createdAt,
-      type: { id: bucketTypes.id, name: bucketTypes.name, kind: bucketTypes.kind },
+      type: {
+        id: bucketTypes.id,
+        name: bucketTypes.name,
+        kind: bucketTypes.kind,
+      },
     })
     .from(buckets)
     .innerJoin(bucketTypes, eq(buckets.typeId, bucketTypes.id))
@@ -38,7 +44,11 @@ export default function Home() {
     .all();
 
   // Current balance per bucket
-  const allEntries = db.select().from(ledger).orderBy(ledger.date, ledger.id).all();
+  const allEntries = db
+    .select()
+    .from(ledger)
+    .orderBy(ledger.date, ledger.id)
+    .all();
 
   const balanceMap: Record<number, number> = {};
   for (const b of allBuckets) balanceMap[b.id] = 0;
@@ -50,10 +60,18 @@ export default function Home() {
 
   // Split into assets and liabilities
   const assetBuckets = allBuckets.filter((b) => b.type.kind === "asset");
-  const liabilityBuckets = allBuckets.filter((b) => b.type.kind === "liability");
+  const liabilityBuckets = allBuckets.filter(
+    (b) => b.type.kind === "liability"
+  );
 
-  const totalAssets = assetBuckets.reduce((s, b) => s + (balanceMap[b.id] ?? 0), 0);
-  const totalLiabilities = liabilityBuckets.reduce((s, b) => s + (balanceMap[b.id] ?? 0), 0);
+  const totalAssets = assetBuckets.reduce(
+    (s, b) => s + (balanceMap[b.id] ?? 0),
+    0
+  );
+  const totalLiabilities = liabilityBuckets.reduce(
+    (s, b) => s + (balanceMap[b.id] ?? 0),
+    0
+  );
   const netWorth = totalAssets - totalLiabilities;
 
   // Build time series snapped to transaction dates (for history chart — assets only)
@@ -71,13 +89,23 @@ export default function Home() {
       }
       idx++;
     }
-    series.push({ date, ...Object.fromEntries(Object.entries(runningBalance).map(([k, v]) => [k, v])) });
+    series.push({
+      date,
+      ...Object.fromEntries(
+        Object.entries(runningBalance).map(([k, v]) => [k, v])
+      ),
+    });
   }
 
   // Only chart asset buckets with a non-zero current balance
   const chartBuckets = assetBuckets
     .filter((b) => (balanceMap[b.id] ?? 0) !== 0)
-    .map((b) => ({ id: b.id, name: b.name, currency: b.currency, currentBalance: balanceMap[b.id] }));
+    .map((b) => ({
+      id: b.id,
+      name: b.name,
+      currency: b.currency,
+      currentBalance: balanceMap[b.id],
+    }));
 
   const allTypes = db.select().from(bucketTypes).all();
 
@@ -91,16 +119,28 @@ export default function Home() {
       {/* Net Worth Summary */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="rounded-xl border p-5">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Assets</p>
-          <p className="text-2xl font-mono font-semibold">{formatCents(totalAssets)}</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+            Total Assets
+          </p>
+          <p className="text-2xl font-mono font-semibold">
+            {formatCents(totalAssets)}
+          </p>
         </div>
         <div className="rounded-xl border p-5">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Liabilities</p>
-          <p className="text-2xl font-mono font-semibold">{formatCents(totalLiabilities)}</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+            Total Liabilities
+          </p>
+          <p className="text-2xl font-mono font-semibold">
+            {formatCents(totalLiabilities)}
+          </p>
         </div>
         <div className="rounded-xl border p-5">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Net Worth</p>
-          <p className="text-2xl font-mono font-semibold">{formatCents(netWorth)}</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+            Net Worth
+          </p>
+          <p className="text-2xl font-mono font-semibold">
+            {formatCents(netWorth)}
+          </p>
         </div>
       </div>
 
@@ -137,15 +177,25 @@ export default function Home() {
             return (
               <TableRow key={bucket.id}>
                 <TableCell className="font-medium">
-                  <Link href={`/buckets/${bucket.id}`} className="hover:underline">
+                  <Link
+                    href={`/buckets/${bucket.id}`}
+                    className="hover:underline"
+                  >
                     {bucket.name}
                   </Link>
                 </TableCell>
                 <TableCell className="capitalize">{bucket.type.name}</TableCell>
-                <TableCell className="font-mono">{formatCents(balance, bucket.currency)}</TableCell>
+                <TableCell className="font-mono">
+                  {formatCents(balance, bucket.currency)}
+                </TableCell>
                 <TableCell>{bucket.currency}</TableCell>
                 <TableCell>
-                  <Badge variant={bucket.status === "active" ? "default" : "secondary"} className="capitalize">
+                  <Badge
+                    variant={
+                      bucket.status === "active" ? "default" : "secondary"
+                    }
+                    className="capitalize"
+                  >
                     {bucket.status}
                   </Badge>
                 </TableCell>
@@ -176,7 +226,10 @@ export default function Home() {
         <TableBody>
           {liabilityBuckets.length === 0 && (
             <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground">
+              <TableCell
+                colSpan={7}
+                className="text-center text-muted-foreground"
+              >
                 No liabilities recorded.
               </TableCell>
             </TableRow>
@@ -186,15 +239,25 @@ export default function Home() {
             return (
               <TableRow key={bucket.id}>
                 <TableCell className="font-medium">
-                  <Link href={`/buckets/${bucket.id}`} className="hover:underline">
+                  <Link
+                    href={`/buckets/${bucket.id}`}
+                    className="hover:underline"
+                  >
                     {bucket.name}
                   </Link>
                 </TableCell>
                 <TableCell className="capitalize">{bucket.type.name}</TableCell>
-                <TableCell className="font-mono">{formatCents(balance, bucket.currency)}</TableCell>
+                <TableCell className="font-mono">
+                  {formatCents(balance, bucket.currency)}
+                </TableCell>
                 <TableCell>{bucket.currency}</TableCell>
                 <TableCell>
-                  <Badge variant={bucket.status === "active" ? "default" : "secondary"} className="capitalize">
+                  <Badge
+                    variant={
+                      bucket.status === "active" ? "default" : "secondary"
+                    }
+                    className="capitalize"
+                  >
                     {bucket.status}
                   </Badge>
                 </TableCell>

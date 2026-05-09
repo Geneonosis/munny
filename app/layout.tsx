@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Geist } from "next/font/google";
-import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: "munny",
@@ -17,10 +17,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("h-full antialiased", "font-sans", geist.variable)}>
+    <html
+      lang="en"
+      className={cn("h-full antialiased", "font-sans", geist.variable)}
+    >
       {/* Blocking script prevents flash of wrong theme */}
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: intentional inline theme-init script
+          dangerouslySetInnerHTML={{
+            __html: `
           (function(){
             var t = localStorage.getItem('munny-theme');
             var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -28,7 +34,9 @@ export default function RootLayout({
               document.documentElement.classList.add('dark');
             }
           })();
-        `}} />
+        `,
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col">
         <div className="flex justify-end px-6 py-3 border-b">

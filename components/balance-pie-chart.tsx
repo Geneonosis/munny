@@ -1,12 +1,27 @@
 "use client";
 
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import {
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 import { getChartColor } from "@/lib/chart-colors";
 
-type Bucket = { id: number; name: string; currentBalance: number; currency: string };
+type Bucket = {
+  id: number;
+  name: string;
+  currentBalance: number;
+  currency: string;
+};
 
 function formatCents(cents: number) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(cents / 100);
 }
 
 function PieTooltip({
@@ -30,8 +45,19 @@ function PieTooltip({
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <span style={{ width: 8, height: 8, borderRadius: "50%", background: p.payload.fill, flexShrink: 0, display: "inline-block" }} />
-        <span>{p.name}: {formatCents(p.value)}</span>
+        <span
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            background: p.payload.fill,
+            flexShrink: 0,
+            display: "inline-block",
+          }}
+        />
+        <span>
+          {p.name}: {formatCents(p.value)}
+        </span>
       </div>
     </div>
   );
@@ -58,6 +84,7 @@ export function BalancePieChart({ buckets }: { buckets: Bucket[] }) {
           outerRadius={100}
         >
           {data.map((entry, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: stable ordered list, no unique id available
             <Cell key={i} fill={entry.fill} />
           ))}
         </Pie>
@@ -66,9 +93,7 @@ export function BalancePieChart({ buckets }: { buckets: Bucket[] }) {
           layout="vertical"
           align="left"
           verticalAlign="middle"
-          formatter={(value) => (
-            <span style={{ fontSize: 11 }}>{value}</span>
-          )}
+          formatter={(value) => <span style={{ fontSize: 11 }}>{value}</span>}
           wrapperStyle={{
             maxHeight: 300,
             overflowY: "auto",
@@ -82,4 +107,3 @@ export function BalancePieChart({ buckets }: { buckets: Bucket[] }) {
     </ResponsiveContainer>
   );
 }
-

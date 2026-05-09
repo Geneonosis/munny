@@ -7,7 +7,9 @@ export function ThemeToggle() {
     // Will be false on the server; corrected immediately by the blocking script + useEffect
     if (typeof window === "undefined") return false;
     const stored = localStorage.getItem("munny-theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
     return stored ? stored === "dark" : prefersDark;
   });
 
@@ -24,6 +26,7 @@ export function ThemeToggle() {
 
   return (
     <button
+      type="button"
       onClick={toggle}
       aria-label="Toggle dark mode"
       className="rounded-full border px-3 py-1 text-xs"
@@ -32,4 +35,3 @@ export function ThemeToggle() {
     </button>
   );
 }
-

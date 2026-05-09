@@ -1,9 +1,9 @@
 export const dynamic = "force-dynamic";
 
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { bucketTypes } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { json, error } from "../_lib/response";
+import { error, json } from "../_lib/response";
 
 // GET /api/bucket-types — list all bucket types
 export async function GET() {
@@ -24,9 +24,13 @@ export async function POST(req: Request) {
     .where(eq(bucketTypes.name, name))
     .get();
 
-  if (existing) return error("a bucket type with that name already exists", 409);
+  if (existing)
+    return error("a bucket type with that name already exists", 409);
 
-  const created = db.insert(bucketTypes).values({ name, isSystem: false }).returning().get();
+  const created = db
+    .insert(bucketTypes)
+    .values({ name, isSystem: false })
+    .returning()
+    .get();
   return json(created, 201);
 }
-

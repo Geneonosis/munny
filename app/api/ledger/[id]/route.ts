@@ -1,9 +1,9 @@
 export const dynamic = "force-dynamic";
 
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { ledger } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { json, error } from "../../_lib/response";
+import { error, json } from "../../_lib/response";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -11,7 +11,7 @@ type Params = { params: Promise<{ id: string }> };
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params;
   const numId = Number(id);
-  if (isNaN(numId)) return error("invalid id");
+  if (Number.isNaN(numId)) return error("invalid id");
 
   const entry = db.select().from(ledger).where(eq(ledger.id, numId)).get();
   if (!entry) return error("not found", 404);
@@ -22,7 +22,7 @@ export async function GET(_req: Request, { params }: Params) {
 export async function PATCH(req: Request, { params }: Params) {
   const { id } = await params;
   const numId = Number(id);
-  if (isNaN(numId)) return error("invalid id");
+  if (Number.isNaN(numId)) return error("invalid id");
 
   const existing = db.select().from(ledger).where(eq(ledger.id, numId)).get();
   if (!existing) return error("not found", 404);
@@ -32,11 +32,13 @@ export async function PATCH(req: Request, { params }: Params) {
 
   if (body?.amount !== undefined) {
     const amount = Number(body.amount);
-    if (isNaN(amount) || amount <= 0) return error("amount must be a positive number (in cents)");
+    if (Number.isNaN(amount) || amount <= 0)
+      return error("amount must be a positive number (in cents)");
     updates.amount = amount;
   }
   if (body?.flow !== undefined) {
-    if (!["in", "out"].includes(body.flow)) return error("flow must be 'in' or 'out'");
+    if (!["in", "out"].includes(body.flow))
+      return error("flow must be 'in' or 'out'");
     updates.flow = body.flow;
   }
   if (body?.note !== undefined) updates.note = body.note?.trim() ?? null;
@@ -45,7 +47,8 @@ export async function PATCH(req: Request, { params }: Params) {
     updates.categoryId = body.categoryId ? Number(body.categoryId) : null;
   }
 
-  if (Object.keys(updates).length === 0) return error("no valid fields to update");
+  if (Object.keys(updates).length === 0)
+    return error("no valid fields to update");
 
   db.update(ledger).set(updates).where(eq(ledger.id, numId)).run();
   return json(db.select().from(ledger).where(eq(ledger.id, numId)).get());
@@ -55,7 +58,7 @@ export async function PATCH(req: Request, { params }: Params) {
 export async function DELETE(_req: Request, { params }: Params) {
   const { id } = await params;
   const numId = Number(id);
-  if (isNaN(numId)) return error("invalid id");
+  if (Number.isNaN(numId)) return error("invalid id");
 
   const existing = db.select().from(ledger).where(eq(ledger.id, numId)).get();
   if (!existing) return error("not found", 404);
@@ -63,4 +66,3 @@ export async function DELETE(_req: Request, { params }: Params) {
   db.delete(ledger).where(eq(ledger.id, numId)).run();
   return json({ deleted: true });
 }
-

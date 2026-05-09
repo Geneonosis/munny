@@ -1,8 +1,8 @@
+import fs from "node:fs";
+import path from "node:path";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { db } from "../db/index";
 import { seedDev } from "../db/seed";
-import path from "path";
-import fs from "fs";
 
 async function main() {
   const dbDir = path.dirname(process.env.DATABASE_URL ?? "./data/munny-dev.db");
@@ -21,4 +21,3 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-
