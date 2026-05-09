@@ -2,7 +2,7 @@ services:
   munny:
     build: .
     ports:
-      - "3000:3000"
+      - "43557:3000"
     environment:
       DATABASE_URL: /app/data/munny.db
     volumes:

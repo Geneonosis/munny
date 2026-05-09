@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "43557:3000"
     environment:
       NODE_ENV: development
       DATABASE_URL: /app/data/munny-dev.db
