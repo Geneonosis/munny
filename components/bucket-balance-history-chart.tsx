@@ -82,12 +82,24 @@ export function BucketBalanceHistoryChart({ series }: { series: BalancePoint[] }
   const startDate = series[range[0]]?.date;
   const endDate = series[range[1]]?.date;
 
+  const minValue = Math.min(...visible.map((p) => p.balance));
+  const maxValue = Math.max(...visible.map((p) => p.balance));
+  // Only floor the y-axis to the min value when the range doesn't include zero,
+  // giving a clearer sense of growth on accounts that never dip to zero.
+  const yMin = minValue > 0 ? Math.floor(minValue * 0.995) : undefined;
+  const yMax = Math.ceil(maxValue * 1.005);
+
   return (
     <div className="flex flex-col gap-4">
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={visible}>
           <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-          <YAxis tickFormatter={formatCents} tick={{ fontSize: 11 }} width={80} />
+          <YAxis
+            tickFormatter={formatCents}
+            tick={{ fontSize: 11 }}
+            width={80}
+            domain={[yMin ?? "auto", yMax]}
+          />
           <Tooltip content={(props) => <BucketTooltip series={series} active={props.active} payload={props.payload as unknown as { name: string; value: number; color: string; dataKey: string }[] | undefined} label={props.label as string | undefined} />} />
           <Line
             type="monotone"

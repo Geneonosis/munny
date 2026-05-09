@@ -103,7 +103,7 @@ export default async function BucketPage({ params }: Params) {
             {formatCents(balance, bucket.currency)}
           </p>
         </div>
-        <AddTransactionDialog bucketId={bucket.id} availableCategories={allCategories} />
+        <AddTransactionDialog bucketId={bucket.id} availableCategories={allCategories} currentBalance={balance} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
