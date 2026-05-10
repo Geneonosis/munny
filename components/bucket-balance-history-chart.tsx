@@ -106,10 +106,16 @@ function BucketTooltip({
   );
 }
 
+// Bucket types that represent investment/growth accounts where anchoring at 0
+// would obscure meaningful changes — these start at the data minimum instead.
+const INVESTMENT_TYPES = new Set(["investment", "brokerage", "crypto"]);
+
 export function BucketBalanceHistoryChart({
   series,
+  bucketType,
 }: {
   series: BalancePoint[];
+  bucketType?: string;
 }) {
   const [range, setRange] = useState<[number, number]>([
     0,
@@ -130,9 +136,10 @@ export function BucketBalanceHistoryChart({
 
   const minValue = Math.min(...visible.map((p) => p.balance));
   const maxValue = Math.max(...visible.map((p) => p.balance));
-  // Only floor the y-axis to the min value when the range doesn't include zero,
-  // giving a clearer sense of growth on accounts that never dip to zero.
-  const yMin = minValue > 0 ? Math.floor(minValue * 0.995) : undefined;
+  const isInvestment = bucketType ? INVESTMENT_TYPES.has(bucketType) : false;
+  // Investment accounts: start at data minimum for better growth visibility.
+  // All other accounts (checking, savings, etc.): anchor at 0.
+  const yMin = isInvestment && minValue > 0 ? Math.floor(minValue * 0.995) : 0;
   const yMax = Math.ceil(maxValue * 1.005);
 
   return (
@@ -144,7 +151,7 @@ export function BucketBalanceHistoryChart({
             tickFormatter={formatCents}
             tick={{ fontSize: 11 }}
             width={80}
-            domain={[yMin ?? "auto", yMax]}
+            domain={[yMin, yMax]}
           />
           <Tooltip
             content={(props) => (

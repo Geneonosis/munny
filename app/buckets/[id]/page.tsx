@@ -124,6 +124,7 @@ export default async function BucketPage({ params }: Params) {
         <div className="rounded-xl border p-6">
           <h2 className="text-sm font-semibold mb-4">Balance History</h2>
           <BucketBalanceHistoryChart
+            bucketType={bucket.type}
             series={Object.values(
               rowsAsc.reduce<Record<string, { date: string; balance: number }>>(
                 (acc, r) => {
