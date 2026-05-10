@@ -5,6 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddTransactionDialog } from "@/components/add-transaction-dialog";
 import { BucketBalanceHistoryChart } from "@/components/bucket-balance-history-chart";
+import { BucketDailyFlowChart } from "@/components/bucket-daily-flow-chart";
 import { LedgerSankeyChart } from "@/components/ledger-sankey-chart";
 import { LedgerTable } from "@/components/ledger-table";
 import { Badge } from "@/components/ui/badge";
@@ -136,6 +137,11 @@ export default async function BucketPage({ params }: Params) {
             )}
           />
         </div>
+      </div>
+
+      <div className="rounded-xl border p-6 mb-8">
+        <h2 className="text-sm font-semibold mb-4">Daily Income vs Spending</h2>
+        <BucketDailyFlowChart rows={rowsAsc} />
       </div>
 
       <LedgerTable
