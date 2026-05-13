@@ -15,8 +15,10 @@ This directory contains all database layer code.
 ### `bucket_types`
 An extensible enum table representing the type of financial account a bucket can be.
 
-- System types (`is_system = true`): `checking`, `savings`, `credit`, `cash`, `investment`, `crypto`, `brokerage` — **never delete these**.
+- `kind` — `"asset"` | `"liability"`. Assets contribute positively to net worth; liabilities subtract. This field drives net worth calculations, sign conventions, and UI display (e.g. mortgage and loans show as liabilities).
+- System types (`is_system = true`): `checking`, `savings`, `credit`, `cash`, `investment`, `crypto`, `brokerage`, `mortgage`, `loan` — **never delete these**.
 - Users may add their own custom types (`is_system = false`).
+- Liability buckets (e.g. mortgages, car loans) track the outstanding balance, which counts against net worth. If a home is modeled as an asset bucket and its mortgage as a liability, both appear in net worth calculations.
 
 ### `buckets`
 The core account/wallet entity. A bucket is any container that holds money (e.g. a checking account, a savings account, a cash envelope, a crypto wallet).

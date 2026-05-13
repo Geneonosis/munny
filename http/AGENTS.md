@@ -16,7 +16,7 @@ Open any `.http` file in WebStorm and use the green ▶ run button next to each 
 
 ## Conventions
 
-- The `@baseUrl` variable at the top of each file points to `http://localhost:3000/api` — update it if your port changes.
+- The `@baseUrl` variable at the top of each file points to `http://localhost:43557/api` — the app runs on port **43557**, not 3000.
 - Each `###` block represents one request.
 - Hardcoded IDs in path params (e.g. `/buckets/1`) should be updated to a real ID from a prior `GET` or `POST` response before running.
 - When adding a new API endpoint, add a corresponding request block to the relevant `.http` file (or create a new one if it covers a new resource).

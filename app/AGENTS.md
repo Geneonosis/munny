@@ -28,17 +28,19 @@ Next.js App Router directory. All pages, layouts, and API routes live here.
 
 | Route | File | Description |
 |---|---|---|
-| `/` | `app/page.tsx` | Buckets overview — balance pie chart + history chart, then a table of all non-deleted buckets with current balance. Each bucket name links to its ledger page. Each row has an Edit button (opens `EditBucketDialog`). New buckets created via `CreateBucketDialog`. |
-| `/buckets/[id]` | `app/buckets/[id]/page.tsx` | Per-bucket ledger page — bucket header (name, type, currency, status, current balance), side-by-side Sankey flow chart + balance history chart, then a full ledger table with running balance per row. Each row has an Edit button (opens `EditTransactionDialog`). New entries via `AddTransactionDialog`. |
+| `/` | `app/page.tsx` | Buckets overview — top section has two chart panels (balance pie chart at 1/3 width, balance history chart at 2/3 width), followed by an income vs spending daily flow chart for the full portfolio, then a table of all non-deleted buckets with current balance. Each bucket name links to its ledger page. Each row has an Edit button (opens `EditBucketDialog`). New buckets created via `CreateBucketDialog`. |
+| `/buckets/[id]` | `app/buckets/[id]/page.tsx` | Per-bucket ledger page — bucket header (name, type, currency, status, current balance), side-by-side Sankey flow chart + balance history chart, daily flow bar chart, then a paginated ledger table (most-recent first, 10/25/50/100 rows per page). Each row has an Edit button (opens `EditTransactionDialog`). New entries via `AddTransactionDialog` (supports transaction mode and balance entry mode). |
 
 > **Any file that imports from `@/db` must export `export const dynamic = "force-dynamic"` at the top.** This applies to both pages and API routes. Without it, Next.js attempts to statically pre-render at build time and fails because the database doesn't exist in the build container.
 
 ## Charting
 
-- Recharts is used for line and pie charts, installed via `npx shadcn@latest add chart`.
+- Recharts is used for line, area, bar, and pie charts, installed via `npx shadcn@latest add chart`.
 - `@nivo/sankey` is used for the Sankey flow diagram on the bucket ledger page — it is a separate library from Recharts and renders pure SVG.
-- Chart colors come from `--chart-1` through `--chart-5` CSS variables in `globals.css`. The shadcn defaults are grayscale — **do not reset them**.
+- Chart colors come from `lib/chart-colors.ts` (`buildColorMap` / `getChartColor`) — golden-ratio hue stepping ensures no two series ever share a color.
+- `Tooltip` `content` prop in Recharts requires a renderer with `readonly` payload — match the type signature or cast carefully.
 - `Tooltip` formatter in Recharts receives `value: ValueType | undefined` — always cast with `Number(value)` before passing to `Intl.NumberFormat`.
+- **Dark mode** is supported via `next-themes`. The `ThemeProvider` is in the root layout. Use `dark:` Tailwind variants and CSS variable-based colors. SVG-rendered charts (Nivo) must set text color via JS using `getComputedStyle` on `--foreground` — CSS classes do not apply inside SVG.
 
 ## Styling Rules
 

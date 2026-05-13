@@ -38,7 +38,7 @@ Next.js App Router Route Handlers — the server-side API layer. All routes talk
 ### Charts
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/charts/history` | Returns `{ buckets, series }` — active (non-zero balance) buckets and a time-series of cumulative balances snapped to transaction dates |
+| GET | `/api/charts/history` | Returns `{ buckets, series }` — active (non-zero balance) buckets and a time-series of cumulative balances snapped to transaction dates. Used by `BalanceHistoryChart` and `BalancePieChart` on the overview page. |
 
 ## Conventions
 
@@ -46,6 +46,7 @@ Next.js App Router Route Handlers — the server-side API layer. All routes talk
 - All responses go through `_lib/response.ts` helpers: `json(data, status?)` and `error(message, status?)`.
 - `better-sqlite3` is synchronous — Drizzle calls do **not** use `await`. Route handler functions are still declared `async` for `req.json()`.
 - Input validation is done manually (no schema validation library). Keep it simple.
-- `GET /api/buckets` and `GET /api/buckets/[id]` always join `bucket_types` and return the full type object inline.
+- `GET /api/buckets` and `GET /api/buckets/[id]` always join `bucket_types` and return the full type object inline, including `kind` (`"asset"` | `"liability"`).
 - Deleted buckets are excluded from list endpoints but can still be fetched by ID.
 - System categories (`is_system = true`) cannot be deleted via the API.
+- The app runs on **port 43557** — update `@baseUrl` in `.http` files accordingly.

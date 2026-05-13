@@ -13,14 +13,17 @@ React components used across the application.
 
 | File | Type | Purpose |
 |---|---|---|
-| `add-transaction-dialog.tsx` | Client | Dialog form for adding a new ledger entry to a specific bucket. Accepts `bucketId` and `availableCategories` as props. Amount entered in dollars, converted to cents on submit. Calls `router.refresh()` on success. |
-| `edit-transaction-dialog.tsx` | Client | Dialog form for editing an existing ledger entry. Pre-fills all fields from the current row. Accepts `row` and `availableCategories`. Calls `PATCH /api/ledger/[id]` and `router.refresh()` on success. Re-syncs state to current row values on re-open. |
-| `create-bucket-dialog.tsx` | Client | Dialog form for creating a new bucket. Accepts `bucketTypes` as props. |
-| `edit-bucket-dialog.tsx` | Client | Dialog form for editing an existing bucket. Pre-fills name, type, currency, and status. Accepts `bucket` and `bucketTypes`. Calls `PATCH /api/buckets/[id]` and `router.refresh()` on success. Re-syncs state to current values on re-open. |
-| `balance-pie-chart.tsx` | Client | Recharts `PieChart` showing each bucket's share of total balance. Receives `{ id, name, currentBalance, currency }[]`. Zero-balance buckets are excluded. Colors assigned from `--chart-N` CSS vars by index. |
-| `balance-history-chart.tsx` | Client | Recharts `LineChart` showing running balance per bucket over time. Receives `buckets` and `series` (pre-computed time-series from the server). Includes a range `Slider` to control the visible window snapped to transaction dates. |
-| `bucket-balance-history-chart.tsx` | Client | Recharts `LineChart` showing a single bucket's running balance over time. Receives `series: { date, balance }[]`. Includes a range `Slider`. Used on the per-bucket ledger page. |
-| `ledger-sankey-chart.tsx` | Client | `@nivo/sankey` Sankey flow diagram showing how income flows into spending categories for a selected month. Includes a month dropdown derived from ledger rows. Handles surplus (→ "Retained" sink) and deficit (← "Deficit" source, distributed proportionally). Falls back to a message when no data exists for the period. |
+| `add-transaction-dialog.tsx` | Client | Dialog for adding a new ledger entry. Has two modes: **transaction** (enter amount + flow direction) and **balance** (enter the new account balance — the delta is auto-computed and the flow direction is inferred, supporting both gains and losses). Accepts `bucketId`, `availableCategories`, and `currentBalance` props. Calls `router.refresh()` on success. |
+| `edit-transaction-dialog.tsx` | Client | Dialog for editing an existing ledger entry. Pre-fills all fields. Accepts `row` and `availableCategories`. Calls `PATCH /api/ledger/[id]` and `router.refresh()` on success. Re-syncs state on re-open. |
+| `create-bucket-dialog.tsx` | Client | Dialog for creating a new bucket. Accepts `bucketTypes` as props. |
+| `edit-bucket-dialog.tsx` | Client | Dialog for editing an existing bucket. Pre-fills name, type, currency, and status. Accepts `bucket` and `bucketTypes`. Calls `PATCH /api/buckets/[id]` and `router.refresh()` on success. Re-syncs state on re-open. |
+| `balance-pie-chart.tsx` | Client | Recharts `PieChart` showing each bucket's share of total balance. Zero-balance buckets excluded. No labels on slices — legend only. Legend items are stacked vertically, left-aligned, small font, breaks into columns on overflow. Colors assigned via `buildColorMap` from `lib/chart-colors.ts`. |
+| `balance-history-chart.tsx` | Client | Recharts chart showing running balance per bucket over time. Supports two display modes toggled by the user: **line chart** (individual bucket lines) and **area/stacked chart** (cumulative stacked areas). Buckets can be individually toggled on/off — visibility is persisted in Zustand (`useChartStore`). Includes a date range `Slider` (default: last 30 days, max: last 90 days). Custom tooltip shows each bucket's value and day-over-day delta (green +/red −). Colors assigned via `buildColorMap`. Y-axis anchoring varies by bucket type (see AGENTS.md root). |
+| `bucket-balance-history-chart.tsx` | Client | Recharts `LineChart` for a single bucket's running balance over time. Includes a date range `Slider`. Custom tooltip shows the balance and day-over-day delta. Y-axis starts at `0` for non-brokerage accounts; starts at the series minimum for brokerage/investment. |
+| `bucket-daily-flow-chart.tsx` | Client | Recharts `BarChart` (mirrored) showing daily income vs spending for a single bucket. Income bars grow upward (green), spending bars grow downward (red). Bars for the same day share the same x-position. Bottom of income bars and top of spending bars have `borderRadius: 0` (flat at the axis). Includes a date range `Slider` matching the same defaults as `balance-history-chart`. Right side shows a summary panel: total income, total spending, net, and income-to-debt ratio for the visible range. |
+| `ledger-sankey-chart.tsx` | Client | `@nivo/sankey` Sankey flow diagram for a single bucket, showing how income flows into spending categories for a selected month. Handles surplus (→ "Retained") and deficit (← "Deficit", distributed proportionally). Falls back to a message when no data exists. **Dark mode:** uses `blendMode="normal"` (not `multiply`) to prevent SVG color corruption on dark backgrounds. Node label color is set via Nivo's `theme.labels.text.fill` using a JS variable that reads `--foreground` from the computed CSS. |
+| `ledger-table.tsx` | Client | Paginated table of ledger entries for a single bucket. Shows most-recent entries first. Columns: Date, Note, Category, Direction, Amount, Balance, Actions. Pagination options: 10 / 25 / 50 / 100 rows. Each row has an `EditTransactionDialog` trigger. |
+| `theme-toggle.tsx` | Client | Light/dark/system theme toggle button using `next-themes`. Lives in the global nav/header. |
 
 ## Rules
 
@@ -31,10 +34,14 @@ React components used across the application.
   - Use `render={<Component />}` instead of `asChild` on trigger/slot components.
   - `Select.onValueChange` provides `string | null` — guard against null (`(v) => v && setState(v)`).
 - Recharts type gotchas:
+  - `Tooltip` `content` prop type requires `readonly` payload — type your custom renderer accordingly or cast.
   - `Tooltip` formatter receives `value: ValueType | undefined` — cast with `Number(value)`.
   - `PieLabelRenderProps` only contains built-in Recharts fields — use `percent` (0–1) not custom data keys.
 - `@nivo/sankey` gotchas:
   - Nivo components must be `"use client"` — they use browser APIs.
-  - Pass colors via the `colors` callback prop, not the `theme` prop.
+  - Use `blendMode="normal"` — `multiply` breaks dark mode (colors become invisible on dark backgrounds).
+  - SVG text color must be set through `theme={{ labels: { text: { fill: color } } }}` — CSS classes do not reach inside SVG text.
   - Node `id` values must be unique strings and match exactly between `nodes` and `links`.
-  - Nivo Sankey requires all `link.value` to be `> 0` — filter out zero-value links before passing data.
+  - All `link.value` must be `> 0` — filter out zero-value links before passing data.
+- **Global chart state:** use `useChartStore` from `lib/chart-store.ts` (Zustand) to read/write which buckets are hidden. This is persisted via `localStorage` under the key `munny-chart-prefs`.
+- **Chart colors:** always use `buildColorMap` / `getChartColor` from `lib/chart-colors.ts`. Never hardcode colors or use the old `--chart-N` CSS variables for data series.
